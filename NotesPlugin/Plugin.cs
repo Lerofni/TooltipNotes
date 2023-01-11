@@ -50,10 +50,10 @@ namespace NotesPlugin
             this.Configuration.Initialize(this.PluginInterface);
 
             // you might normally want to embed resources and load them from the manifest stream
-            var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-            var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
+            // var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
+            // var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
             WindowSystem.AddWindow(new ConfigWindow(this));
-            WindowSystem.AddWindow(new MainWindow(this, goatImage));
+            WindowSystem.AddWindow(new MainWindow(this));
             WindowSystem.AddWindow(new EditWindow(this));
 
             // this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
