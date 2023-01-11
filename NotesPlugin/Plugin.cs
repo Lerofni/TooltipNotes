@@ -20,21 +20,23 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "Notes Plugin";
-        private const string CommandName = "/pmy";
+        // private const string CommandName = "/pmy";
         
         private readonly XivCommonBase XivCommon;
         
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
+        private readonly InventoryContextMenuItem inventoryContextMenuItem2;
         
         private readonly DalamudContextMenu contextMenuBase;
         private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
+        // private CommandManager CommandManager { get; init; }
         private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
         
         public Configuration Configuration { get; init; }
         public WindowSystem WindowSystem = new("NotesPlugin");
         public ulong id = 0;
         public ulong currentID = 0;
+        public string none = "";
         public Dictionary<ulong, string> Notes = new Dictionary<ulong, string>();
        
         public Plugin(
@@ -42,7 +44,7 @@ namespace NotesPlugin
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
             this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
+            // this.CommandManager = commandManager;
 
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);
@@ -52,11 +54,12 @@ namespace NotesPlugin
             var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
             WindowSystem.AddWindow(new ConfigWindow(this));
             WindowSystem.AddWindow(new MainWindow(this, goatImage));
+            WindowSystem.AddWindow(new EditWindow(this));
 
-            this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-            {
-                HelpMessage = "A useful message to display in /xlhelp"
-            });
+            // this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            // {
+                // HelpMessage = "A useful message to display in /xlhelp"
+            // });
            
             this.PluginInterface.UiBuilder.Draw += DrawUI;
             this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
@@ -64,7 +67,9 @@ namespace NotesPlugin
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
             contextMenuBase = new DalamudContextMenu();
             inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload("Test Note")),test , true);
+                new SeString(new TextPayload("Add Note")),AddNote , true);
+            inventoryContextMenuItem2 = new InventoryContextMenuItem(
+                new SeString(new TextPayload("Edit Note")),EditNote , true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             var info = new FileInfo(filepath);
             if (info.Length > 6)
@@ -78,7 +83,7 @@ namespace NotesPlugin
         public void Dispose()
         {
             this.WindowSystem.RemoveAllWindows();
-            this.CommandManager.RemoveHandler(CommandName);
+            // this.CommandManager.RemoveHandler(CommandName);
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
@@ -95,11 +100,19 @@ namespace NotesPlugin
             this.WindowSystem.Draw();
         }
 
-        public void test(InventoryContextMenuItemSelectedArgs args)
+        public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
             currentID = id;
             WindowSystem.GetWindow("Note Window").IsOpen = true;
         }
+        
+        public void EditNote(InventoryContextMenuItemSelectedArgs args)
+        {
+            currentID = id;
+            WindowSystem.GetWindow("Edit Window").IsOpen = true;
+            EditWindow.Note = Notes[currentID];
+        }
+
 
         public void DrawConfigUI()
         {
@@ -108,7 +121,7 @@ namespace NotesPlugin
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(inventoryContextMenuItem);
+            args.AddCustomItem(Notes.TryGetValue(id, out none) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
         }
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
@@ -119,7 +132,7 @@ namespace NotesPlugin
             var description = itemTooltip[itemTooltipString];
             if (Notes.TryGetValue(id, out value))
             { 
-                description = description.Append($"\n Note: \n");
+                description = description.Append($"\nNote: \n");
                 description = description.Append(value);
                 description = description.Append($"\n");
             }

@@ -9,25 +9,25 @@ using System.Text.Json.Serialization;
 
 namespace NotesPlugin.Windows;
 
-public class MainWindow : Window, IDisposable
+public class EditWindow : Window, IDisposable
 {
     private TextureWrap GoatImage;
     private Plugin Plugin;
 
-    public string Note = string.Empty;
+    public static string Note = string.Empty;
     private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
 
-    public MainWindow(Plugin plugin, TextureWrap goatImage) : base(
-        "Note Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    public EditWindow(Plugin plugin) : base(
+        "Edit Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(250, 110),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
-
-        this.GoatImage = goatImage;
+        
         this.Plugin = plugin;
+        
     }
 
     public void Dispose()
@@ -37,18 +37,19 @@ public class MainWindow : Window, IDisposable
 
     public void close()
     {
-        Plugin.WindowSystem.GetWindow("Note Window").IsOpen = false;
+        Plugin.WindowSystem.GetWindow("Edit Window").IsOpen = false;
     }
 
     
 
     public override void Draw()
-    { 
-        ImGui.InputText($"Note",ref this.Note,1000);
-        // ImGui.Text($"The current id is {Plugin.currentID}");
+    {
+        
+        ImGui.InputText($"Note",ref Note,1000);
+        ImGui.Text($"The current Note is {Note}");
         if (ImGui.Button("Enter Note"))
         {
-            Plugin.Notes.Add(Plugin.currentID,Note);
+            Plugin.Notes[Plugin.currentID] = Note;
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
             File.WriteAllText(filepath, jsonstring);
             Note = $"";
