@@ -18,7 +18,7 @@ public class MainWindow : Window, IDisposable
     private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
      
 
-    public MainWindow(Plugin plugin, TextureWrap goatImage) : base(
+    public MainWindow(Plugin plugin) : base(
         "Note Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -27,7 +27,7 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        this.GoatImage = goatImage;
+        
         this.Plugin = plugin;
     }
 
