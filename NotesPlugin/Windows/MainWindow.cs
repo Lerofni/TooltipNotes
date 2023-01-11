@@ -16,6 +16,7 @@ public class MainWindow : Window, IDisposable
 
     public string Note = string.Empty;
     private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
+     
 
     public MainWindow(Plugin plugin, TextureWrap goatImage) : base(
         "Note Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -45,7 +46,7 @@ public class MainWindow : Window, IDisposable
     public override void Draw()
     { 
         ImGui.InputText($"Note",ref this.Note,1000);
-        // ImGui.Text($"The current id is {Plugin.currentID}");
+        // ImGui.Text($"The current id is {path}");
         if (ImGui.Button("Enter Note"))
         {
             Plugin.Notes.Add(Plugin.currentID,Note);
