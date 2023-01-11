@@ -46,7 +46,7 @@ public class EditWindow : Window, IDisposable
     {
         
         ImGui.InputText($"Note",ref Note,1000);
-        ImGui.Text($"The current Note is {Note}");
+        // ImGui.Text($"The current Note is {Note}");
         if (ImGui.Button("Enter Note"))
         {
             Plugin.Notes[Plugin.currentID] = Note;
