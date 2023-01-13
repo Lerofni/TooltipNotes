@@ -11,14 +11,15 @@ namespace NotesPlugin.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-    private TextureWrap GoatImage;
+    
     private Plugin Plugin;
+    private String Filepath;
 
     public string Note = string.Empty;
-    private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
+    // private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
      
 
-    public MainWindow(Plugin plugin) : base(
+    public MainWindow(Plugin plugin, String filepath) : base(
         "Note Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -29,11 +30,12 @@ public class MainWindow : Window, IDisposable
 
         
         this.Plugin = plugin;
+        this.Filepath = filepath;
     }
 
     public void Dispose()
     {
-        this.GoatImage.Dispose();
+        
     }
 
     public void close()
@@ -51,7 +53,7 @@ public class MainWindow : Window, IDisposable
         {
             Plugin.Notes.Add(Plugin.currentID,Note);
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
-            File.WriteAllText(filepath, jsonstring);
+            File.WriteAllText(Filepath, jsonstring);
             Note = $"";
             close();
         }

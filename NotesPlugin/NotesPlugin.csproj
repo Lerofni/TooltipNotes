@@ -7,7 +7,6 @@
     <Description>A sample plugin.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl></PackageProjectUrl>
-      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
       <Configurations>Debug;Release</Configurations>
       <RootNamespace>NotesPlugin</RootNamespace>
       
@@ -22,10 +21,11 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\Data\goat.png">
+    <Content Include="..\Data\Notes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
     </Content>

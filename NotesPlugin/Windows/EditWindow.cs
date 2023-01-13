@@ -7,17 +7,20 @@ using ImGuiScene;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+
 namespace NotesPlugin.Windows;
 
 public class EditWindow : Window, IDisposable
 {
-    private TextureWrap GoatImage;
+   
     private Plugin Plugin;
+    private String Filepath;
+    
 
     public static string Note = string.Empty;
-    private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
+    
 
-    public EditWindow(Plugin plugin) : base(
+    public EditWindow(Plugin plugin, String filepath) : base(
         "Edit Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -27,12 +30,14 @@ public class EditWindow : Window, IDisposable
         };
         
         this.Plugin = plugin;
-        
+        this.Filepath = filepath;
+
+
     }
 
     public void Dispose()
     {
-        this.GoatImage.Dispose();
+       
     }
 
     public void close()
@@ -51,7 +56,7 @@ public class EditWindow : Window, IDisposable
         {
             Plugin.Notes[Plugin.currentID] = Note;
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
-            File.WriteAllText(filepath, jsonstring);
+            File.WriteAllText(Filepath, jsonstring);
             Note = $"";
             close();
         }
