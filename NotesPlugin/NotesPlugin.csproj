@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Authors></Authors>
-    <Company></Company>
     <Version>0.0.0.1</Version>
     <Description>A sample plugin.</Description>
-    <Copyright></Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Lerofni/TooltipNotesPlugin.git</PackageProjectUrl>
       <Configurations>Debug;Release</Configurations>
       <RootNamespace>NotesPlugin</RootNamespace>
       
