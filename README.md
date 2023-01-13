@@ -1,4 +1,4 @@
-# TooltipNotesPlugin
+# TooltipNotes
 
 A Simple Plugin which lets you add Notes to the tooltips of items (currently only in the descriptions).
 Just right-click a item in you inventory to add a note or edit an existing one.
