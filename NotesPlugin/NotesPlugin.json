@@ -1,13 +1,14 @@
 {
-  "Author": "your name here",
-  "Name": "TooltipNotes Plugin",
+  "Author": "Lore",
+  "Name": "TooltipNotes",
   "Punchline": "A Plugin that lets you add notes to item Tooltips",
   "Description": "By Right-clicking an Item you can add a new note or edit an existing one",
   "InternalName": "NotesPlugin",
   "ApplicableVersion": "any",
   "Tags": [
-    "sample",
+    "TooltipNotes",
     "plugin",
-    "goats"
+    "Lore", 
+      "Notes"
   ]
 }
