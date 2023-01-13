@@ -30,7 +30,7 @@ namespace NotesPlugin
         private readonly DalamudContextMenu contextMenuBase;
         private DalamudPluginInterface PluginInterface { get; init; }
         // private CommandManager CommandManager { get; init; }
-        private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
+       
         
         public Configuration Configuration { get; init; }
         public WindowSystem WindowSystem = new("NotesPlugin");
@@ -50,16 +50,13 @@ namespace NotesPlugin
             this.Configuration.Initialize(this.PluginInterface);
 
             // you might normally want to embed resources and load them from the manifest stream
-            // var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-            // var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
+            var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
+            
             WindowSystem.AddWindow(new ConfigWindow(this));
-            WindowSystem.AddWindow(new MainWindow(this));
-            WindowSystem.AddWindow(new EditWindow(this));
+            WindowSystem.AddWindow(new MainWindow(this,filepath));
+            WindowSystem.AddWindow(new EditWindow(this,filepath));
 
-            // this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-            // {
-                // HelpMessage = "A useful message to display in /xlhelp"
-            // });
+            
            
             this.PluginInterface.UiBuilder.Draw += DrawUI;
             this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
@@ -130,7 +127,7 @@ namespace NotesPlugin
             ItemTooltipString itemTooltipString;
             itemTooltipString = ItemTooltipString.Description;
             var description = itemTooltip[itemTooltipString];
-            if (Notes.TryGetValue(id, out value))
+            if (Notes.TryGetValue(id, out value) && value != "")
             { 
                 description = description.Append($"\nNote: \n");
                 description = description.Append(value);
