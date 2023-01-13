@@ -129,7 +129,7 @@ namespace NotesPlugin
             var description = itemTooltip[itemTooltipString];
             if (Notes.TryGetValue(id, out value) && value != "")
             { 
-                description = description.Append($"\nNote: \n");
+                description = description.Append($"\n\n Note: \n");
                 description = description.Append(value);
                 description = description.Append($"\n");
             }
