@@ -14,6 +14,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Dalamud.Logging;
 
 namespace NotesPlugin
 {
@@ -68,13 +69,18 @@ namespace NotesPlugin
             inventoryContextMenuItem2 = new InventoryContextMenuItem(
                 new SeString(new TextPayload("Edit Note")),EditNote , true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-            var info = new FileInfo(filepath);
-            if (info.Length > 6)
+
+            if (File.Exists(filepath))
             {
                 string jsonString = File.ReadAllText(filepath);
-                Notes = JsonSerializer.Deserialize<Dictionary<ulong,string>>(jsonString);
+                Notes = JsonSerializer.Deserialize<Dictionary<ulong, string>>(jsonString);
+                PluginLog.Debug("Notes.json loaded successfully");
             }
-            
+            else
+            {
+                PluginLog.Debug("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
+            }
+
         }
 
         public void Dispose()
@@ -132,6 +138,7 @@ namespace NotesPlugin
                 description = description.Append($"\n\n Note: \n");
                 description = description.Append(value);
                 description = description.Append($"\n");
+                PluginLog.Debug($"Note should say {value}");
             }
             
             itemTooltip[itemTooltipString] = description;

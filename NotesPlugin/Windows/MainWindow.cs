@@ -6,6 +6,7 @@ using ImGuiNET;
 using ImGuiScene;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Dalamud.Logging;
 
 namespace NotesPlugin.Windows;
 
@@ -48,12 +49,13 @@ public class MainWindow : Window, IDisposable
     public override void Draw()
     { 
         ImGui.InputText($"Note",ref this.Note,1000);
-        // ImGui.Text($"The current id is {path}");
+        // ImGui.Text($"The current path is {Filepath}");
         if (ImGui.Button("Enter Note"))
         {
             Plugin.Notes.Add(Plugin.currentID,Note);
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
             File.WriteAllText(Filepath, jsonstring);
+            PluginLog.Debug("Notes successfully added ");
             Note = $"";
             close();
         }

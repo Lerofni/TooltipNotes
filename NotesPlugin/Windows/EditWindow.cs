@@ -6,6 +6,7 @@ using ImGuiNET;
 using ImGuiScene;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Dalamud.Logging;
 
 
 namespace NotesPlugin.Windows;
@@ -51,12 +52,13 @@ public class EditWindow : Window, IDisposable
     {
         
         ImGui.InputText($"Note",ref Note,1000);
-        // ImGui.Text($"The current Note is {Note}");
+        // ImGui.Text($"The current id is {Plugin.currentID}");
         if (ImGui.Button("Enter Note"))
         {
             Plugin.Notes[Plugin.currentID] = Note;
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
             File.WriteAllText(Filepath, jsonstring);
+            PluginLog.Debug("Notes successfully edited ");
             Note = $"";
             close();
         }
