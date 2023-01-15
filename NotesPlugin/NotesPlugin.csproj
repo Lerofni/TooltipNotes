@@ -37,8 +37,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
     <PackageReference Include="DalamudPackager" Version="2.1.10" />
+    <PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
     <PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
