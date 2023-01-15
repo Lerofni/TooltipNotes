@@ -17,7 +17,7 @@ public class MainWindow : Window, IDisposable
     private String Filepath;
 
     public string Note = string.Empty;
-    // private string filepath = "C:/Users/Marvin/RiderProjects/NotesPlugin/NotesPlugin/bin/x64/Debug/Notes.json";
+    
      
 
     public MainWindow(Plugin plugin, String filepath) : base(

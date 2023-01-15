@@ -20,7 +20,7 @@ namespace NotesPlugin
 {
     public sealed class Plugin : IDalamudPlugin
     {
-        public string Name => "Notes Plugin";
+        public string Name => "TooltipNotes";
         // private const string CommandName = "/pmy";
         
         private readonly XivCommonBase XivCommon;
@@ -34,7 +34,7 @@ namespace NotesPlugin
        
         
         public Configuration Configuration { get; init; }
-        public WindowSystem WindowSystem = new("NotesPlugin");
+        public WindowSystem WindowSystem = new("TooltipNotesNotesPlugin");
         public ulong id = 0;
         public ulong currentID = 0;
         public string none = "";

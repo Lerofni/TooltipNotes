@@ -3,7 +3,7 @@
   "Name": "TooltipNotes",
   "Punchline": "A Plugin that lets you add notes to item Tooltips",
   "Description": "By Right-clicking an Item you can add a new note or edit an existing one",
-  "InternalName": "NotesPlugin",
+  "InternalName": "TooltipNotes",
   "ApplicableVersion": "any",
   "Tags": [
     "TooltipNotes",
