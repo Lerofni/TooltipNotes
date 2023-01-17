@@ -55,7 +55,7 @@ public class EditWindow : Window, IDisposable
         // ImGui.Text($"The current id is {Plugin.currentID}");
         if (ImGui.Button("Enter Note"))
         {
-            Plugin.Notes[Plugin.currentID] = Note;
+            Plugin.Notes[Plugin.currentglamid] = Note;
             string jsonstring = JsonSerializer.Serialize(Plugin.Notes);
             File.WriteAllText(Filepath, jsonstring);
             PluginLog.Debug("Notes successfully edited ");
