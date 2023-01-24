@@ -33,7 +33,7 @@ namespace NotesPlugin
         // private CommandManager CommandManager { get; init; }
        
         
-        public Configuration Configuration { get; init; }
+        
         public WindowSystem WindowSystem = new("TooltipNotes");
         public ulong id = 0;
         public string currentglamid = "";
@@ -49,20 +49,18 @@ namespace NotesPlugin
             this.PluginInterface = pluginInterface;
             // this.CommandManager = commandManager;
 
-            this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            this.Configuration.Initialize(this.PluginInterface);
+           
 
             // you might normally want to embed resources and load them from the manifest stream
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
             
-            // WindowSystem.AddWindow(new ConfigWindow(this));
             WindowSystem.AddWindow(new MainWindow(this,filepath));
             WindowSystem.AddWindow(new EditWindow(this,filepath));
 
             
            
             this.PluginInterface.UiBuilder.Draw += DrawUI;
-            // this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+           
             XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
             contextMenuBase = new DalamudContextMenu();
@@ -120,10 +118,6 @@ namespace NotesPlugin
         }
 
 
-        // public void DrawConfigUI()
-        // {
-        //     WindowSystem.GetWindow("A Wonderful Configuration Window").IsOpen = true;
-        // }
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
