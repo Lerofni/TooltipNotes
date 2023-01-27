@@ -3,7 +3,6 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
-using System.Reflection;
 using Dalamud.Interface.Windowing;
 using NotesPlugin.Windows;
 using XivCommon;
@@ -35,6 +34,9 @@ namespace NotesPlugin
         
         
         public WindowSystem WindowSystem = new("TooltipNotes");
+        
+        private MainWindow MainWindow { get; init; }
+        private EditWindow EditWindow { get; init; }
         public ulong id = 0;
         public string currentglamid = "";
         public string none = "";
@@ -54,10 +56,13 @@ namespace NotesPlugin
             // you might normally want to embed resources and load them from the manifest stream
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
             
-            WindowSystem.AddWindow(new MainWindow(this,filepath));
-            WindowSystem.AddWindow(new EditWindow(this,filepath));
-
+            // WindowSystem.AddWindow(new MainWindow(this,filepath));
+            // WindowSystem.AddWindow(new EditWindow(this,filepath));
+            MainWindow = new MainWindow(this, filepath);
+            EditWindow = new EditWindow(this, filepath);
             
+            WindowSystem.AddWindow(MainWindow);
+            WindowSystem.AddWindow(EditWindow);
            
             this.PluginInterface.UiBuilder.Draw += DrawUI;
            
@@ -86,6 +91,8 @@ namespace NotesPlugin
         public void Dispose()
         {
             this.WindowSystem.RemoveAllWindows();
+            MainWindow.Dispose();
+            EditWindow.Dispose();
             // this.CommandManager.RemoveHandler(CommandName);
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
@@ -96,7 +103,7 @@ namespace NotesPlugin
         private void OnCommand(string command, string args)
         {
             // in response to the slash command, just display our main ui
-            WindowSystem.GetWindow("Note Window").IsOpen = true;
+            // WindowSystem.GetWindow("Note Window").IsOpen = true;
         }
 
         private void DrawUI()
@@ -107,13 +114,13 @@ namespace NotesPlugin
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
             currentglamid = glamid;
-            WindowSystem.GetWindow("Note Window").IsOpen = true;
+            MainWindow.IsOpen = true;
         }
         
         public void EditNote(InventoryContextMenuItemSelectedArgs args)
         {
             currentglamid = glamid;
-            WindowSystem.GetWindow("Edit Window").IsOpen = true;
+            EditWindow.IsOpen = true;
             EditWindow.Note = Notes[currentglamid];
         }
 
