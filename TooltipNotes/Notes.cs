@@ -7,76 +7,128 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Plugin;
+using Dalamud.Configuration;
+using Dalamud.Game.Text.SeStringHandling;
 
 namespace NotesPlugin
 {
-    public class Notes
+    public class Config : IPluginConfiguration
     {
-        private string path;
-        private readonly Dictionary<string, string> data = new Dictionary<string, string>(); // TODO: more generic annotation class?
+        public int Version { get; set; } = 0;
 
-        public Notes(string notesFilePath)
+        [NonSerialized]
+        public DalamudPluginInterface? PluginInterface;
+
+        public class Markup
         {
-            path = notesFilePath;
+            public ushort ColorKey = 0;
+            public ushort GlowColorKey = 0;
 
-            try
+            public static Markup DefaultNotePrefix => new()
             {
-                if (File.Exists(path))
-                {
-                    string jsonString = File.ReadAllText(path);
-                    var deserialized = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
-                    if (deserialized == null)
-                        throw new NullReferenceException();
-                    data = deserialized;
-                    PluginLog.Debug("Notes.json loaded successfully");
-                }
-            }
-            catch
+                ColorKey = 1,
+                GlowColorKey = 60,
+            };
+
+            public static Markup DefaultNote => new()
             {
-                PluginLog.Error("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
-            }
+                ColorKey = 1,
+            };
+
+            public static Markup DefaultLabelPrefix => new()
+            {
+                ColorKey = 1,
+                GlowColorKey = 60,
+            };
+
+            public static Markup DefaultLabel => new()
+            {
+                ColorKey = 1,
+            };
+        }
+
+        public class Label
+        {
+            public string Name = "";
+            public bool ShowInMenu = false;
+            public Markup Markup = new();
+        }
+
+        public class Note
+        {
+            public string Text = "";
+            public Markup Markup = new();
+            public List<string> Labels = new();
+        }
+
+        public bool CharacterSpecific = true;
+        public bool GlamourSpecific = true;
+        public bool EnableStyles = false;
+        public bool NotePrefix = true;
+        public Markup NotePrefixMarkup = Markup.DefaultNotePrefix;
+        public Markup NoteMarkup = Markup.DefaultNote;
+        public bool LabelPrefix = true;
+        public Markup LabelPrefixMarkup = Markup.DefaultLabelPrefix;
+        public Markup LabelMarkup = Markup.DefaultLabel;
+        // TODO: replace with ordered dictionary
+        public Dictionary<string, Label> Labels = new();
+        public readonly Dictionary<string, Note> Notes = new();
+
+        public static T DeepClone<T>(T object2Copy)
+        {
+            var options = new JsonSerializerOptions
+            {
+                IncludeFields = true,
+            };
+            var json = JsonSerializer.Serialize(object2Copy, options);
+            if (json == null)
+                throw new NullReferenceException();
+            var obj = JsonSerializer.Deserialize<T>(json, options);
+            if (obj == null)
+                throw new NullReferenceException();
+            return obj;
         }
 
         public void Save()
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
-                File.WriteAllText(path, json);
-                PluginLog.Debug("Notes successfully edited");
+                PluginInterface?.SavePluginConfig(this);
+                PluginLog.Debug("Configuration saved successfully!");
             }
             catch
             {
-                PluginLog.Error("Error saving notes");
+                PluginLog.Error("Configuration could not be saved");
             }
         }
 
-        public string this[string noteKey]
+        public Note this[string noteKey]
         {
             get
             {
-                return data[noteKey];
+                return Notes[noteKey];
             }
             set
             {
-                data[noteKey] = value;
+                Notes[noteKey] = value;
                 Save();
             }
         }
 
         public bool ContainsKey(string notekey)
         {
-            return data.ContainsKey(notekey);
+            return Notes.ContainsKey(notekey);
         }
 
-        public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out string value)
+        public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out Note value)
         {
-            return data.TryGetValue(notekey, out value);
+            return Notes.TryGetValue(notekey, out value);
         }
 
         public bool Remove(string noteKey)
         {
-            var removed = data.Remove(noteKey);
+            var removed = Notes.Remove(noteKey);
             Save();
             return removed;
         }
