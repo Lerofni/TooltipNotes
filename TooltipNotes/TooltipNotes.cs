@@ -42,6 +42,7 @@ namespace NotesPlugin
         public string none = "";
         public SeString glam = $"";
         public string glamid = "";
+        public string text = "";
         public Dictionary<string, string> Notes = new Dictionary<string, string>();
        
         public Plugin(
@@ -172,10 +173,17 @@ namespace NotesPlugin
             var description = itemTooltip[itemTooltipString];
             
             if (Notes.TryGetValue(glamid, out value) && value != "")
-            { 
-                description = description.Append($"\n\nNote: \n");
-                description = description.Append(value);
-                description = description.Append($"\n");
+            {
+                text = $"\n\nNote: \n {value} \n";
+                var test = new List<Payload>
+                {
+                    new UIForegroundPayload(1),
+                    new UIGlowPayload(0),
+                    new TextPayload(text),
+                    new UIForegroundPayload(0),
+                    new UIGlowPayload(0),
+                };
+                description = description.Append(test);
                 PluginLog.Debug($"Note should say {value}");
                 
             }
