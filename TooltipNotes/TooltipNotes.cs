@@ -127,13 +127,14 @@ namespace NotesPlugin
                 if (hasLabel)
                 {
                     note.Labels.Remove(label);
+                    if (note.Labels.Count == 0 && note.Text.Length == 0)
+                        Config.Remove(lastNoteKey);
                 }
                 else
                 {
                     note.Labels.Add(label);
                 }
                 Config.Save();
-                PluginLog.Debug($"{label} {lastNoteKey} -> {string.Join(", ", note.Labels)}");
             }, true);
         }
 
