@@ -40,19 +40,10 @@ public class NoteWindow : Window, IDisposable
 
         ImGui.PushItemWidth(350);
         var enterPressed = ImGui.InputText("", ref note.Text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
-        var popupId = "editNoteStyle";
         if (notes.EnableStyles)
         {
             ImGui.SameLine();
-            if (ImGui.Button($"Style"))
-                ImGui.OpenPopup(popupId);
-        }
-        ImGui.PopItemWidth();
-
-        if (notes.EnableStyles && ImGui.BeginPopup(popupId))
-        {
-            ConfigWindow.MarkupUI("markup", ref note.Markup, new());
-            ImGui.EndPopup();
+            ConfigWindow.StyleButton("Style", "note", ref note.Markup, new());
         }
 
         // Check if the user pressed ESC

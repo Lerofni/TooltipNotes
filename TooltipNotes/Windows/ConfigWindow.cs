@@ -132,7 +132,7 @@ public class ConfigWindow : Window, IDisposable
         return true;
     }
 
-    public void StyleButton(string label, string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
+    public static void StyleButton(string label, string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
     {
         var popupId = $"popup{id}";
         if (ImGui.Button($"{label}##{id}"))
