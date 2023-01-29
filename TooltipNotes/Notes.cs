@@ -33,7 +33,7 @@ namespace NotesPlugin
             }
             catch
             {
-                PluginLog.Debug("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
+                PluginLog.Error("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
             }
         }
 
@@ -41,9 +41,9 @@ namespace NotesPlugin
         {
             try
             {
-                string jsonstring = JsonSerializer.Serialize(data);
-                File.WriteAllText(path, jsonstring);
-                PluginLog.Debug("Notes successfully edited ");
+                var json = JsonSerializer.Serialize(data);
+                File.WriteAllText(path, json);
+                PluginLog.Debug("Notes successfully edited");
             }
             catch
             {
