@@ -192,7 +192,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Checkbox("Enable styles", ref enableStyles);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
-            ImGui.SetTooltip("Enable label/note styling (experimental)");
+            ImGui.SetTooltip("Enable custom label/note styling (experimental)");
         }
 
         if (enableStyles)
@@ -202,20 +202,20 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.SameLine();
             StyleButton("Label", "label", ref labelMarkup, Config.Markup.DefaultLabel, "Default label style");
+        }
 
-            ImGui.Checkbox("Note prefix", ref notePrefix);
-            if (notePrefix)
-            {
-                ImGui.SameLine();
-                StyleButton("Style", "notePrefix", ref notePrefixMarkup, Config.Markup.DefaultNotePrefix, "Default note prefix style");
-            }
+        ImGui.Checkbox("Note prefix", ref notePrefix);
+        if (notePrefix && enableStyles)
+        {
+            ImGui.SameLine();
+            StyleButton("Style", "notePrefix", ref notePrefixMarkup, Config.Markup.DefaultNotePrefix, "Default note prefix style");
+        }
 
-            ImGui.Checkbox("Label prefix", ref labelPrefix);
-            if (labelPrefix)
-            {
-                ImGui.SameLine();
-                StyleButton("Style", "labelPrefix", ref labelPrefixMarkup, Config.Markup.DefaultLabelPrefix, "Default label prefix style");
-            }
+        ImGui.Checkbox("Label prefix", ref labelPrefix);
+        if (labelPrefix && enableStyles)
+        {
+            ImGui.SameLine();
+            StyleButton("Style", "labelPrefix", ref labelPrefixMarkup, Config.Markup.DefaultLabelPrefix, "Default label prefix style");
         }
 
         ImGui.Separator();
@@ -301,11 +301,27 @@ public class ConfigWindow : Window, IDisposable
                 config.GlamourSpecific = glamourSpecific;
                 config.EnableStyles = enableStyles;
                 config.NotePrefix = notePrefix;
-                config.NotePrefixMarkup = notePrefixMarkup;
-                config.NoteMarkup = noteMarkup;
+                if (enableStyles)
+                {
+                    config.NotePrefixMarkup = notePrefixMarkup;
+                    config.NoteMarkup = noteMarkup;
+                }
+                else
+                {
+                    config.NotePrefixMarkup = Config.Markup.DefaultNotePrefix;
+                    config.NoteMarkup = Config.Markup.DefaultLabel;
+                }
                 config.LabelPrefix = labelPrefix;
-                config.LabelPrefixMarkup = labelPrefixMarkup;
-                config.LabelMarkup = labelMarkup;
+                if (enableStyles)
+                {
+                    config.LabelPrefixMarkup = labelPrefixMarkup;
+                    config.LabelMarkup = labelMarkup;
+                }
+                else
+                {
+                    config.LabelPrefixMarkup = Config.Markup.DefaultLabelPrefix;
+                    config.LabelMarkup = Config.Markup.DefaultLabel;
+                }
                 config.Save();
                 IsOpen = false;
             }

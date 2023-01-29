@@ -103,9 +103,55 @@ namespace NotesPlugin
             noteWindow.Edit(lastNoteKey);
         }
 
+        private InventoryContextMenuItem createLabelContextMenuItem(string label)
+        {
+            var hasLabel = false;
+            if (Config.TryGetValue(lastNoteKey, out var note))
+            {
+                hasLabel = note.Labels.Contains(label);
+            }
+            var name = new SeString(new TextPayload($"{(hasLabel ? "Unlabel" : "Label")}: {label}"));
+            return new InventoryContextMenuItem(name, args =>
+            {
+                Config.Note note;
+                if (!Config.ContainsKey(lastNoteKey))
+                {
+                    note = new();
+                    Config[lastNoteKey] = note;
+                }
+                else
+                {
+                    note = Config[lastNoteKey];
+                }
+
+                if (hasLabel)
+                {
+                    note.Labels.Remove(label);
+                }
+                else
+                {
+                    note.Labels.Add(label);
+                }
+                Config.Save();
+                PluginLog.Debug($"{label} {lastNoteKey} -> {string.Join(", ", note.Labels)}");
+            }, true);
+        }
+
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
             args.AddCustomItem(Config.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+
+            // Updating labels while editing does not work
+            if (!noteWindow.IsOpen)
+            {
+                foreach (var label in Config.Labels.Values)
+                {
+                    if (label.ShowInMenu)
+                    {
+                        args.AddCustomItem(createLabelContextMenuItem(label.Name));
+                    }
+                }
+            }
         }
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
@@ -188,50 +234,37 @@ namespace NotesPlugin
                     description.AddUiForegroundOff();
                 }
 
-                if (Config.EnableStyles)
+                if (note.Text.Length > 0)
                 {
                     if (Config.NotePrefix)
                     {
                         AppendMarkup(Config.NotePrefixMarkup, "Note: ", Config.Markup.DefaultNotePrefix);
                     }
-                    AppendMarkup(note.Markup, note.Text, Config.NoteMarkup);
-                    for (var i = 0; i < note.Labels.Count; i++)
-                    {
-                        var label = note.Labels[i];
-                        var labelMarkup = new Config.Markup();
-                        if (Config.Labels.TryGetValue(label, out var labelConfig))
-                        {
-                            labelMarkup = labelConfig.Markup;
-                        }
-                        if (i == 0)
-                        {
-                            description.Append("\n");
-                            if (Config.LabelPrefix)
-                            {
-                                AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
-                            }
-                        }
-                        else
-                        {
-                            AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
-                        }
-                        AppendMarkup(labelMarkup, label, Config.LabelMarkup);
-                    }
+                    var noteMarkup = Config.EnableStyles ? note.Markup : new();
+                    AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
                 }
-                else
+
+                for (var i = 0; i < note.Labels.Count; i++)
                 {
-                    description.AddUiForeground(1);
-                    description.AddUiGlow(60);
-                    description.Append("Note: ");
-                    description.AddUiGlowOff();
-                    description.Append(note.Text);
-                    if (note.Labels.Count > 0)
+                    var label = note.Labels[i];
+                    var labelMarkup = new Config.Markup();
+                    if (Config.EnableStyles && Config.Labels.TryGetValue(label, out var labelConfig))
+                    {
+                        labelMarkup = labelConfig.Markup;
+                    }
+                    if (i == 0)
                     {
                         description.Append("\n");
-                        description.Append("Labels: ");
-                        description.Append(string.Join(", ", note.Labels));
+                        if (Config.LabelPrefix)
+                        {
+                            AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
+                        }
                     }
-                    description.AddUiForegroundOff();
+                    else
+                    {
+                        AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
+                    }
+                    AppendMarkup(labelMarkup, label, Config.LabelMarkup);
                 }
 
                 // If we prepend the note, add some newlines before the original data

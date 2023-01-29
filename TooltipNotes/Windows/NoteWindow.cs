@@ -78,7 +78,7 @@ public class NoteWindow : Window, IDisposable
         {
             if (ImGui.Button("Save") || enterPressed)
             {
-                if (!string.IsNullOrEmpty(note.Text))
+                if (!string.IsNullOrEmpty(note.Text) || note.Labels.Count > 0)
                 {
                     note.Labels = new();
                     foreach (var label in labels)
