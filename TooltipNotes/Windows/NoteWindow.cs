@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
+using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ImGuiScene;
@@ -12,15 +13,15 @@ namespace NotesPlugin.Windows;
 
 public class NoteWindow : Window, IDisposable
 {
-    private readonly Config notes;
+    private readonly Config config;
     private bool focusNoteField = false;
     private string noteKey = "";
     private Config.Note note = new();
 
-    public NoteWindow(Config notes) : base(
+    public NoteWindow(Config config) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
-        this.notes = notes;
+        this.config = config;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -40,7 +41,7 @@ public class NoteWindow : Window, IDisposable
 
         ImGui.PushItemWidth(350);
         var enterPressed = ImGui.InputText("", ref note.Text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
-        if (notes.EnableStyles)
+        if (config.EnableStyles)
         {
             ImGui.SameLine();
             ConfigWindow.StyleButton("Style", "note", ref note.Markup, new());
@@ -58,11 +59,11 @@ public class NoteWindow : Window, IDisposable
             {
                 if (!string.IsNullOrEmpty(note.Text))
                 {
-                    notes[noteKey] = note;
+                    config[noteKey] = note;
                 }
                 else
                 {
-                    notes.Remove(noteKey);
+                    config.Remove(noteKey);
                 }
                 IsOpen = false;
 
@@ -77,9 +78,9 @@ public class NoteWindow : Window, IDisposable
         focusNoteField = true;
 
         this.noteKey = noteKey;
-        if (notes.ContainsKey(noteKey))
+        if (config.ContainsKey(noteKey))
         {
-            note = Config.DeepClone(notes[noteKey]);
+            note = Config.DeepClone(config[noteKey]);
         }
         else
         {

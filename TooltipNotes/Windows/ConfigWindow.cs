@@ -16,7 +16,7 @@ namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private readonly Config notes;
+    private readonly Config config;
 
     // Config state
     private bool characterSpecific;
@@ -30,10 +30,10 @@ public class ConfigWindow : Window, IDisposable
     private int focusLabelIndex = -1;
     private string errorMessage = "";
 
-    public ConfigWindow(string pluginName, Config notes) : base(
+    public ConfigWindow(string pluginName, Config config) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
-        this.notes = notes;
+        this.config = config;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -43,15 +43,15 @@ public class ConfigWindow : Window, IDisposable
 
     public override void OnOpen()
     {
-        characterSpecific = notes.CharacterSpecific;
-        glamourSpecific = notes.GlamourSpecific;
-        enableStyles = notes.EnableStyles;
-        prefixMarkup = Config.DeepClone(notes.PrefixMarkup);
-        defaultMarkup = Config.DeepClone(notes.DefaultMarkup);
+        characterSpecific = config.CharacterSpecific;
+        glamourSpecific = config.GlamourSpecific;
+        enableStyles = config.EnableStyles;
+        prefixMarkup = Config.DeepClone(config.PrefixMarkup);
+        defaultMarkup = Config.DeepClone(config.DefaultMarkup);
 
         try
         {
-            labels = Config.DeepClone(notes.Labels.Values.Where(l => l.Name.Length > 0).ToList());
+            labels = Config.DeepClone(config.Labels.Values.Where(l => l.Name.Length > 0).ToList());
         }
         catch (NullReferenceException)
         {
@@ -268,13 +268,13 @@ public class ConfigWindow : Window, IDisposable
                         throw new ArgumentException($"Label '{label.Name}' is not unique!");
                 }
 
-                notes.Labels = labelsDict;
-                notes.CharacterSpecific = characterSpecific;
-                notes.GlamourSpecific = glamourSpecific;
-                notes.EnableStyles = enableStyles;
-                notes.PrefixMarkup = prefixMarkup;
-                notes.DefaultMarkup = defaultMarkup;
-                notes.Save();
+                config.Labels = labelsDict;
+                config.CharacterSpecific = characterSpecific;
+                config.GlamourSpecific = glamourSpecific;
+                config.EnableStyles = enableStyles;
+                config.PrefixMarkup = prefixMarkup;
+                config.DefaultMarkup = defaultMarkup;
+                config.Save();
                 IsOpen = false;
             }
             catch (Exception x)

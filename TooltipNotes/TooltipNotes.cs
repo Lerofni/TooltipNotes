@@ -35,7 +35,7 @@ namespace NotesPlugin
         private readonly NoteWindow noteWindow;
         private readonly ConfigWindow configWindow;
 
-        public readonly Config Notes;
+        public readonly Config Config;
         private string lastNoteKey = "";
 
         [PluginService]
@@ -48,26 +48,26 @@ namespace NotesPlugin
         {
             this.pluginInterface = pluginInterface;
 
-            Notes = new Config();
+            Config = new Config();
             try
             {
                 var pluginConfig = pluginInterface.GetPluginConfig();
                 if (pluginConfig is Config d)
-                    Notes = d;
+                    Config = d;
                 PluginLog.Debug("Configuration loaded successfully!");
             }
             catch
             {
                 PluginLog.Error("Configuration could not be loaded");
             }
-            Notes.PluginInterface = this.pluginInterface;
+            Config.PluginInterface = this.pluginInterface;
 
             windowSystem = new(Name);
 
-            noteWindow = new NoteWindow(Notes);
+            noteWindow = new NoteWindow(Config);
             windowSystem.AddWindow(noteWindow);
 
-            configWindow = new ConfigWindow(Name, Notes);
+            configWindow = new ConfigWindow(Name, Config);
             windowSystem.AddWindow(configWindow);
 
             this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
@@ -105,7 +105,7 @@ namespace NotesPlugin
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(Notes.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+            args.AddCustomItem(Config.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
         }
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
@@ -134,18 +134,18 @@ namespace NotesPlugin
                 return;
             }
 
-            if (Notes.CharacterSpecific)
+            if (Config.CharacterSpecific)
             {
                 var characterId = ClientState?.LocalContentId ?? 0;
                 lastNoteKey = $"{characterId:X16}-";
             }
             lastNoteKey += itemid;
-            if (Notes.GlamourSpecific && glamourName.Length > 0)
+            if (Config.GlamourSpecific && glamourName.Length > 0)
             {
                 lastNoteKey += $"~{glamourName}";
             }
 
-            if (Notes.TryGetValue(lastNoteKey, out var note))
+            if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
                 var description = new SeStringBuilder();
@@ -168,7 +168,7 @@ namespace NotesPlugin
                     if (markup.ColorKey >= 580)
                     {
                         // Fall back to default style
-                        markup = Notes.DefaultMarkup;
+                        markup = Config.DefaultMarkup;
                     }
 
                     description.AddUiForeground(markup.ColorKey);
@@ -188,9 +188,9 @@ namespace NotesPlugin
                     description.AddUiForegroundOff();
                 }
 
-                if (Notes.EnableStyles)
+                if (Config.EnableStyles)
                 {
-                    AppendMarkup(Notes.PrefixMarkup, "Note: ");
+                    AppendMarkup(Config.PrefixMarkup, "Note: ");
                     AppendMarkup(note.Markup, note.Text);
                 }
                 else
