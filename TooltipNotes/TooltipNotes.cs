@@ -142,11 +142,12 @@ namespace NotesPlugin
                 // Color table: https://i.imgur.com/cZceCI3.png
                 // Data (the 'key' is the 'colorKey' parameter)
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
+                // Using AddUiForegroundOff doesn't work because the whole cell is colored
                 description.AddUiForeground(1);
                 description.AddUiGlow(60);
-                //description.AddUiForegroundOff(); // not working, the whole cell is colored
-                description.Append($"\n\nNote: {noteText}");
+                description.Append("\n\nNote: ");
                 description.AddUiGlowOff();
+                description.Append(noteText);
                 description.AddUiForegroundOff();
                 PluginLog.Debug($"Note should say {noteText}");
                 PluginLog.Debug($"itemid: {itemid}, glamid: {LastNoteKey}, flags:\n{string.Join("\n", itemTooltip.Fields.ToString().Split(' '))}");
