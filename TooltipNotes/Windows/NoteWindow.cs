@@ -13,8 +13,10 @@ namespace NotesPlugin.Windows;
 public class NoteWindow : Window, IDisposable
 {
     private readonly Plugin plugin;
+    
 
     public static string Note = string.Empty;
+    public bool focusNoteField = true;
 
     public NoteWindow(Plugin plugin) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -34,8 +36,8 @@ public class NoteWindow : Window, IDisposable
 
     public void close()
     {
-        var window = plugin.WindowSystem.GetWindow(WindowName);
-        if (window != null)
+        var window = plugin.NoteWindow;
+        if (window.IsOpen)
         {
             window.IsOpen = false;
         }
@@ -43,6 +45,12 @@ public class NoteWindow : Window, IDisposable
 
     public override void Draw()
     {
+        // thanks to MidoriKami from the Discord for the keyboard focus
+        if (focusNoteField)
+        {
+            ImGui.SetKeyboardFocusHere();
+            focusNoteField = false;
+        }
         var enterPressed = ImGui.InputText("Note", ref Note, 1000, ImGuiInputTextFlags.EnterReturnsTrue);
         if (ImGui.Button("Save") || enterPressed)
         {

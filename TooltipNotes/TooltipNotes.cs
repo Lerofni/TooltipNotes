@@ -31,7 +31,7 @@ namespace NotesPlugin
 
         public WindowSystem WindowSystem = new("TooltipNotes");
 
-        private NoteWindow NoteWindow { get; init; }
+        public NoteWindow NoteWindow { get; init; }
 
         public readonly Notes Notes;
         public string EditingNoteKey = "";
