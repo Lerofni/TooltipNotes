@@ -208,6 +208,7 @@ public class ConfigWindow : Window, IDisposable
             return;
         }
 
+        ImGui.Text("Settings:");
         ImGui.Checkbox("Character-specific notes", ref characterSpecific);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
@@ -220,33 +221,46 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip("Changing this might hide some existing notes!");
         }
 
-        ImGui.Checkbox("Enable styles", ref enableStyles);
+        ImGui.Separator();
+
+        ImGui.Text("Custom Colors:");
+
+        ImGui.Checkbox("Enable", ref enableStyles);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
-            ImGui.SetTooltip("Enable custom label/note styling (experimental)");
+            ImGui.SetTooltip("Enable custom note/label colors");
         }
 
         if (enableStyles)
         {
+            StyleButton("Note Colors", "note", ref noteMarkup, Config.Markup.DefaultNote, "Default note text colors");
             ImGui.SameLine();
-            StyleButton("Note", "note", ref noteMarkup, Config.Markup.DefaultNote, "Default note style");
-
-            ImGui.SameLine();
-            StyleButton("Label", "label", ref labelMarkup, Config.Markup.DefaultLabel, "Default label style");
         }
-
-        ImGui.Checkbox("Note prefix", ref notePrefix);
+        ImGui.Checkbox($"{(enableStyles ? "Prefix" : "Note prefix")}##notePrefix", ref notePrefix);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Show 'Note:' in front of notes");
+        }
         if (notePrefix && enableStyles)
         {
             ImGui.SameLine();
-            StyleButton("Style", "notePrefix", ref notePrefixMarkup, Config.Markup.DefaultNotePrefix, "Default note prefix style");
+            StyleButton("Prefix Colors", "notePrefix", ref notePrefixMarkup, Config.Markup.DefaultNotePrefix, "Colors for the 'Note:' prefix");
         }
 
-        ImGui.Checkbox("Label prefix", ref labelPrefix);
+        if (enableStyles)
+        {
+            StyleButton("Label Colors", "label", ref labelMarkup, Config.Markup.DefaultLabel, "Default label text colors");
+            ImGui.SameLine();
+        }
+        ImGui.Checkbox($"{(enableStyles ? "Prefix" : "Label prefix")}##labelPrefix", ref labelPrefix);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Show 'Labels:' in front of labels");
+        }
         if (labelPrefix && enableStyles)
         {
             ImGui.SameLine();
-            StyleButton("Style", "labelPrefix", ref labelPrefixMarkup, Config.Markup.DefaultLabelPrefix, "Default label prefix style");
+            StyleButton("Prefix Colors", "labelPrefix", ref labelPrefixMarkup, Config.Markup.DefaultLabelPrefix, "Colors for the 'Label:' prefix");
         }
 
         ImGui.Separator();
@@ -271,17 +285,20 @@ public class ConfigWindow : Window, IDisposable
 
             var enterPressed = ImGui.InputText($"##labelInput{i}", ref labels[i].Name, 50, inputFlags);
 
+            var labelDescription = labels[i].Name.Length > 0 ? $"'{labels[i].Name}'" : "new";
+
             ImGui.SameLine();
             ImGui.Checkbox($"Menu##menu{i}", ref labels[i].ShowInMenu);
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             {
-                ImGui.SetTooltip("Add this label to the item menu");
+                ImGui.SetTooltip($"Add a menu for toggling the {labelDescription} label");
             }
 
             if (enableStyles)
             {
                 ImGui.SameLine();
-                StyleButton("Style", $"style{i}", ref labels[i].Markup, new());
+                var name = labels[i].Name;
+                StyleButton("Colors", $"style{i}", ref labels[i].Markup, new(), $"Colors for the {labelDescription} label");
             }
 
             ImGui.SameLine();
@@ -311,6 +328,8 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.PopItemWidth();
         }
+
+        ImGui.Separator();
         var saveClicked = ImGui.Button("Save");
 
         if (saveClicked)
