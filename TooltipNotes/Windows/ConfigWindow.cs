@@ -96,37 +96,48 @@ public class ConfigWindow : Window, IDisposable
 
     public static bool MarkupUI(string id, ref Config.Markup markup, Config.Markup defaultMarkup)
     {
-        ImGui.Checkbox("Glow", ref markup.Glow);
+        ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
+
+        void Hyperlink(string text, string url)
+        {
+            var navColor = ImGui.GetStyle().Colors[(int)ImGuiCol.NavHighlight];
+            ImGui.PushStyleColor(ImGuiCol.Text, navColor);
+            ImGui.Text(text);
+            if (ImGui.IsItemHovered())
+            {
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                {
+                    OpenURL(url);
+                }
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                AddUnderLine(navColor);
+            }
+            ImGui.PopStyleColor();
+        }
+
         int colorKey = markup.ColorKey;
         ImGui.PushItemWidth(100);
-        if (ImGui.InputInt($"##{id}", ref colorKey))
-            markup.ColorKey = (ushort)(colorKey & 0xFFFF);
+        if (ImGui.InputInt($"##color{id}", ref colorKey))
+            markup.ColorKey = (ushort)colorKey;
         ImGui.PopItemWidth();
 
         ImGui.SameLine();
-        var x = ImGui.GetStyle().Colors[(int)ImGuiCol.NavHighlight];
-        ImGui.PushStyleColor(ImGuiCol.Text, x);
-        ImGui.Text("Color Key");
-        if (ImGui.IsItemHovered())
-        {
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-            {
-                OpenURL("https://i.imgur.com/cZceCI3.png");
-            }
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            AddUnderLine(x);
-        }
-        else
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
-        }
-        ImGui.PopStyleColor();
+        Hyperlink("Color", "https://i.imgur.com/cZceCI3.png");
+
+        ImGui.PushItemWidth(100);
+        int glowColorKey = markup.GlowColorKey;
+        if (ImGui.InputInt($"##glow{id}", ref glowColorKey))
+            markup.GlowColorKey = (ushort)glowColorKey;
+        ImGui.PopItemWidth();
+
+        ImGui.SameLine();
+        Hyperlink("Glow", "https://i.imgur.com/cZceCI3.png");
 
         if (ImGui.Button("Default"))
         {
             markup.ColorKey = defaultMarkup.ColorKey;
-            markup.Glow = defaultMarkup.Glow;
-            PluginLog.Debug($"Default: {markup.ColorKey}:{markup.Glow}");
+            markup.GlowColorKey = defaultMarkup.GlowColorKey;
+            PluginLog.Debug($"color: {markup.ColorKey}, glow: {markup.GlowColorKey}");
         }
 
         return true;

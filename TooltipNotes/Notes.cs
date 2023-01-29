@@ -23,18 +23,17 @@ namespace NotesPlugin
         public class Markup
         {
             public ushort ColorKey = ushort.MaxValue;
-            public bool Glow = false;
+            public ushort GlowColorKey = ushort.MaxValue;
 
             public static Markup DefaultPrefix => new()
             {
-                ColorKey = 60,
-                Glow = true,
+                ColorKey = 1,
+                GlowColorKey = 60,
             };
 
             public static Markup DefaultNote => new()
             {
                 ColorKey = 1,
-                Glow = false,
             };
         }
 

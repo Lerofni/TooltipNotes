@@ -171,19 +171,16 @@ namespace NotesPlugin
                         markup = Notes.DefaultMarkup;
                     }
 
-                    if (markup.Glow)
+                    description.AddUiForeground(markup.ColorKey);
+
+                    if(markup.GlowColorKey < 580)
                     {
-                        description.AddUiForeground(1);
-                        description.AddUiGlow(markup.ColorKey);
-                    }
-                    else
-                    {
-                        description.AddUiForeground(markup.ColorKey);
+                        description.AddUiGlow(markup.GlowColorKey);
                     }
 
                     description.Append(text);
 
-                    if (markup.Glow)
+                    if (markup.GlowColorKey < 580)
                     {
                         description.AddUiGlowOff();
                     }
