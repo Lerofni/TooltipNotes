@@ -51,6 +51,10 @@ namespace NotesPlugin
             }
         }
 
+        public Dictionary<string,string> Data()
+        {
+            return data;
+        }
         public string this[string noteKey]
         {
             get

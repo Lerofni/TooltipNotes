@@ -20,9 +20,10 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
+        private const string CommandName = "/EditNotes";
 
         private readonly XivCommonBase XivCommon;
-
+        private CommandManager CommandManager { get; init; }
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
 
@@ -32,6 +33,7 @@ namespace NotesPlugin
         public WindowSystem WindowSystem = new("TooltipNotes");
 
         public NoteWindow NoteWindow { get; init; }
+        public MassEditWindow MassEditWindow23 { get; init; }
 
         public readonly Notes Notes;
         public string LastNoteKey = "";
@@ -41,13 +43,23 @@ namespace NotesPlugin
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
             PluginInterface = pluginInterface;
+            CommandManager = commandManager;
 
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
             Notes = new Notes(filepath);
 
             NoteWindow = new NoteWindow(this);
+            MassEditWindow23 = new MassEditWindow(this);
 
             WindowSystem.AddWindow(NoteWindow);
+            WindowSystem.AddWindow(MassEditWindow23);
+
+            this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            {
+                HelpMessage = "Lets you edit all your notes in one window"
+            });
+            
+            
 
             PluginInterface.UiBuilder.Draw += DrawUI;
 
@@ -65,15 +77,22 @@ namespace NotesPlugin
         {
             WindowSystem.RemoveAllWindows();
             NoteWindow.Dispose();
+            MassEditWindow23.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
             XivCommon.Dispose();
+            this.CommandManager.RemoveHandler(CommandName);
         }
 
         private void DrawUI()
         {
             WindowSystem.Draw();
+        }
+
+        public void OnCommand(string command,string args)
+        {
+            MassEditWindow23.IsOpen = true;
         }
 
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
