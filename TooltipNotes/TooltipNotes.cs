@@ -42,8 +42,9 @@ namespace NotesPlugin
         {
             PluginInterface = pluginInterface;
 
-            var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
+            var filepath = Path.Combine(PluginInterface.GetPluginConfigDirectory(), "Notes.json");
             Notes = new Notes(filepath);
+            
 
             NoteWindow = new NoteWindow(this);
 
@@ -137,7 +138,7 @@ namespace NotesPlugin
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
                 description.AddUiForeground(1);
                 description.AddUiGlow(60);
-                description.Append("Note: ");
+                description.Append("Note:  ");
                 description.AddUiGlowOff();
                 description.Append(noteText);
                 description.AddUiForegroundOff();
