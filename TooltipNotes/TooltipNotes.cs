@@ -254,7 +254,10 @@ namespace NotesPlugin
                     }
                     if (i == 0)
                     {
-                        description.Append("\n");
+                        if (note.Text.Length > 0)
+                        {
+                            description.Append("\n");
+                        }
                         if (Config.LabelPrefix)
                         {
                             AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
