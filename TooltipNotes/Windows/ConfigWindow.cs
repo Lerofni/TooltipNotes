@@ -102,50 +102,78 @@ public class ConfigWindow : Window, IDisposable
         }).Start();
     }
 
-    public static bool MarkupUI(string id, ref Config.Markup markup, Config.Markup defaultMarkup)
+    public class ColorInfo
     {
-        ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
+        public ushort Index = ushort.MaxValue;
+        public byte R = 0;
+        public byte G = 0;
+        public byte B = 0;
+        public byte A = 0;
 
-        void Hyperlink(string text, string url)
+        public static ColorInfo FromUIColor(ushort index, uint foreground)
         {
-            var navColor = ImGui.GetStyle().Colors[(int)ImGuiCol.NavHighlight];
-            ImGui.PushStyleColor(ImGuiCol.Text, navColor);
-            ImGui.Text(text);
-            if (ImGui.IsItemHovered())
+            return new()
             {
-                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                {
-                    OpenURL(url);
-                }
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                AddUnderLine(navColor);
-            }
-            ImGui.PopStyleColor();
+                Index = index,
+                R = (byte)((foreground >> 24) & 0xFF),
+                G = (byte)((foreground >> 16) & 0xFF),
+                B = (byte)((foreground >> 8) & 0xFF),
+                A = (byte)((foreground >> 0) & 0xFF),
+            };
         }
 
-        int colorKey = markup.ColorKey;
-        ImGui.PushItemWidth(100);
-        if (ImGui.InputInt($"##color{id}", ref colorKey))
-            markup.ColorKey = (ushort)colorKey;
-        ImGui.PopItemWidth();
+        public override string ToString()
+        {
+            return $"#{R:X2}{G:X2}{B:X2}:{Index}";
+        }
 
-        ImGui.SameLine();
-        Hyperlink("Color", "https://i.imgur.com/cZceCI3.png");
+        public Vector4 Vec4 => new Vector4(R / 255f, G / 255f, B / 255f, A / 255f);
+    }
 
-        ImGui.PushItemWidth(100);
-        int glowColorKey = markup.GlowColorKey;
-        if (ImGui.InputInt($"##glow{id}", ref glowColorKey))
-            markup.GlowColorKey = (ushort)glowColorKey;
-        ImGui.PopItemWidth();
+    public static List<ColorInfo> ForegroundColors = new();
+    public static List<ColorInfo> GlowColors = new();
 
-        ImGui.SameLine();
-        Hyperlink("Glow", "https://i.imgur.com/cZceCI3.png");
+    public static bool MarkupUI(string id, ref Config.Markup markup, Config.Markup defaultMarkup)
+    {
+        void PalettePicker(string name, List<ColorInfo> palette, ref ushort index)
+        {
+            var paletteButtonFlags = ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.NoTooltip;
+            ImGui.Separator();
+            ImGui.BeginGroup(); // Lock X position
+            ImGui.Text(name);
+            ImGui.SameLine();
+            var selectedColor = new ColorInfo();
+            foreach (var color in palette)
+            {
+                if (color.Index == index)
+                {
+                    selectedColor = color;
+                }
+            }
+            ImGui.ColorButton($"##selected{name}", selectedColor.Vec4, paletteButtonFlags, new Vector2(20, 20));
+
+            for (var i = 0; i < palette.Count; i++)
+            {
+                ImGui.PushID(i);
+                if ((i % 15) != 0)
+                    ImGui.SameLine(0f, ImGui.GetStyle().ItemSpacing.Y);
+
+                if (ImGui.ColorButton($"##palette{name}", palette[i].Vec4, paletteButtonFlags, new Vector2(20, 20)))
+                {
+                    index = palette[i].Index;
+                }
+                ImGui.PopID();
+            }
+            ImGui.EndGroup();
+        }
+
+        PalettePicker($"Color:", ForegroundColors, ref markup.ColorKey);
+        PalettePicker($"Glow:", GlowColors, ref markup.GlowColorKey);
 
         if (ImGui.Button("Default"))
         {
             markup.ColorKey = defaultMarkup.ColorKey;
             markup.GlowColorKey = defaultMarkup.GlowColorKey;
-            PluginLog.Debug($"color: {markup.ColorKey}, glow: {markup.GlowColorKey}");
         }
 
         return true;

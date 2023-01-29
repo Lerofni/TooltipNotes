@@ -15,6 +15,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dalamud.Logging;
 using Dalamud.Game.ClientState;
+using Dalamud.Data;
+using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
 {
@@ -42,11 +44,35 @@ namespace NotesPlugin
         [RequiredVersion("1.0")]
         public static ClientState? ClientState { get; private set; }
 
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static DataManager? DataManager { get; private set; }
+
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
             this.pluginInterface = pluginInterface;
+
+            ConfigWindow.ForegroundColors.Clear();
+            ConfigWindow.GlowColors.Clear();
+
+            if (DataManager != null)
+            {
+                var colorSheet = DataManager.GetExcelSheet<UIColor>();
+                if (colorSheet != null)
+                {
+                    for (var i = 0u; i < colorSheet.RowCount; i++)
+                    {
+                        var row = colorSheet.GetRow(i);
+                        if (row != null)
+                        {
+                            ConfigWindow.ForegroundColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIForeground));
+                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIGlow));
+                        }
+                    }
+                }
+            }
 
             Config = new Config();
             try
@@ -212,25 +238,24 @@ namespace NotesPlugin
 
                 void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
                 {
-                    if (markup.ColorKey >= 580)
-                    {
-                        // Fall back to default style
+                    if (markup.ColorKey == 0 && markup.GlowColorKey == 0)
                         markup = fallbackMarkup;
-                    }
 
-                    description.AddUiForeground(markup.ColorKey);
-
-                    if (markup.GlowColorKey < 580)
+                    var foregroundColor = markup.ColorKey;
+                    var foregroundAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == foregroundColor)?.A ?? 0;
+                    if (foregroundAlpha == 0)
                     {
-                        description.AddUiGlow(markup.GlowColorKey);
+                        foregroundColor = fallbackMarkup.ColorKey;
                     }
+                    description.AddUiForeground(foregroundColor);
+
+                    var glowColor = markup.GlowColorKey;
+                    var glowAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == glowColor)?.A ?? 0;
+                    description.AddUiGlow(glowColor);
 
                     description.Append(text);
 
-                    if (markup.GlowColorKey < 580)
-                    {
-                        description.AddUiGlowOff();
-                    }
+                    description.AddUiGlowOff();
 
                     description.AddUiForegroundOff();
                 }

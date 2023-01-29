@@ -119,7 +119,6 @@ public class NoteWindow : Window, IDisposable
         var noteLabels = new HashSet<string>();
         foreach (var label in note.Labels)
         {
-            PluginLog.Debug($"note label: {label}");
             noteLabels.Add(label);
         }
 
