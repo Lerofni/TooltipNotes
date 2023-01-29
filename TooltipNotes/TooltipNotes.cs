@@ -163,17 +163,17 @@ namespace NotesPlugin
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
 
-                void AppendMarkup(Config.Markup markup, string text)
+                void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
                 {
                     if (markup.ColorKey >= 580)
                     {
                         // Fall back to default style
-                        markup = Config.DefaultMarkup;
+                        markup = fallbackMarkup;
                     }
 
                     description.AddUiForeground(markup.ColorKey);
 
-                    if(markup.GlowColorKey < 580)
+                    if (markup.GlowColorKey < 580)
                     {
                         description.AddUiGlow(markup.GlowColorKey);
                     }
@@ -190,8 +190,33 @@ namespace NotesPlugin
 
                 if (Config.EnableStyles)
                 {
-                    AppendMarkup(Config.PrefixMarkup, "Note: ");
-                    AppendMarkup(note.Markup, note.Text);
+                    if (Config.NotePrefix)
+                    {
+                        AppendMarkup(Config.NotePrefixMarkup, "Note: ", Config.Markup.DefaultNotePrefix);
+                    }
+                    AppendMarkup(note.Markup, note.Text, Config.NoteMarkup);
+                    for (var i = 0; i < note.Labels.Count; i++)
+                    {
+                        var label = note.Labels[i];
+                        var labelMarkup = new Config.Markup();
+                        if (Config.Labels.TryGetValue(label, out var labelConfig))
+                        {
+                            labelMarkup = labelConfig.Markup;
+                        }
+                        if (i == 0)
+                        {
+                            description.Append("\n");
+                            if (Config.LabelPrefix)
+                            {
+                                AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
+                            }
+                        }
+                        else
+                        {
+                            AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
+                        }
+                        AppendMarkup(labelMarkup, label, Config.LabelMarkup);
+                    }
                 }
                 else
                 {
@@ -200,6 +225,12 @@ namespace NotesPlugin
                     description.Append("Note: ");
                     description.AddUiGlowOff();
                     description.Append(note.Text);
+                    if (note.Labels.Count > 0)
+                    {
+                        description.Append("\n");
+                        description.Append("Labels: ");
+                        description.Append(string.Join(", ", note.Labels));
+                    }
                     description.AddUiForegroundOff();
                 }
 

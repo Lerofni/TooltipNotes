@@ -25,13 +25,24 @@ namespace NotesPlugin
             public ushort ColorKey = ushort.MaxValue;
             public ushort GlowColorKey = ushort.MaxValue;
 
-            public static Markup DefaultPrefix => new()
+            public static Markup DefaultNotePrefix => new()
             {
                 ColorKey = 1,
                 GlowColorKey = 60,
             };
 
             public static Markup DefaultNote => new()
+            {
+                ColorKey = 1,
+            };
+
+            public static Markup DefaultLabelPrefix => new()
+            {
+                ColorKey = 1,
+                GlowColorKey = 60,
+            };
+
+            public static Markup DefaultLabel => new()
             {
                 ColorKey = 1,
             };
@@ -54,8 +65,12 @@ namespace NotesPlugin
         public bool CharacterSpecific = true;
         public bool GlamourSpecific = true;
         public bool EnableStyles = false;
-        public Markup PrefixMarkup = Markup.DefaultPrefix;
-        public Markup DefaultMarkup = Markup.DefaultNote;
+        public bool NotePrefix = true;
+        public Markup NotePrefixMarkup = Markup.DefaultNotePrefix;
+        public Markup NoteMarkup = Markup.DefaultNote;
+        public bool LabelPrefix = true;
+        public Markup LabelPrefixMarkup = Markup.DefaultLabelPrefix;
+        public Markup LabelMarkup = Markup.DefaultLabel;
         // TODO: replace with ordered dictionary
         public Dictionary<string, Label> Labels = new();
         public readonly Dictionary<string, Note> Notes = new();

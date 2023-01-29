@@ -22,8 +22,12 @@ public class ConfigWindow : Window, IDisposable
     private bool characterSpecific;
     private bool glamourSpecific;
     private bool enableStyles;
-    private Config.Markup prefixMarkup = new();
-    private Config.Markup defaultMarkup = new();
+    private bool notePrefix;
+    private Config.Markup notePrefixMarkup = new();
+    private Config.Markup noteMarkup = new();
+    private bool labelPrefix;
+    private Config.Markup labelPrefixMarkup = new();
+    private Config.Markup labelMarkup = new();
     private List<Config.Label> labels = new();
 
     // Internal helper state
@@ -46,8 +50,12 @@ public class ConfigWindow : Window, IDisposable
         characterSpecific = config.CharacterSpecific;
         glamourSpecific = config.GlamourSpecific;
         enableStyles = config.EnableStyles;
-        prefixMarkup = Config.DeepClone(config.PrefixMarkup);
-        defaultMarkup = Config.DeepClone(config.DefaultMarkup);
+        notePrefix = config.NotePrefix;
+        notePrefixMarkup = Config.DeepClone(config.NotePrefixMarkup);
+        noteMarkup = Config.DeepClone(config.NoteMarkup);
+        labelPrefix = config.LabelPrefix;
+        labelPrefixMarkup = config.LabelPrefixMarkup;
+        labelMarkup = config.LabelMarkup;
 
         try
         {
@@ -143,11 +151,16 @@ public class ConfigWindow : Window, IDisposable
         return true;
     }
 
-    public static void StyleButton(string label, string id, ref Config.Markup markup, Config.Markup defaultMarkup)
+    public static void StyleButton(string label, string id, ref Config.Markup markup, Config.Markup defaultMarkup, string tooltip = "")
     {
         var popupId = $"popup{id}";
         if (ImGui.Button($"{label}##{id}"))
             ImGui.OpenPopup(popupId);
+
+        if (tooltip.Length > 0 && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip(tooltip);
+        }
 
         if (ImGui.BeginPopup(popupId))
         {
@@ -185,9 +198,24 @@ public class ConfigWindow : Window, IDisposable
         if (enableStyles)
         {
             ImGui.SameLine();
-            StyleButton("Prefix", "prefix", ref prefixMarkup, Config.Markup.DefaultPrefix);
+            StyleButton("Note", "note", ref noteMarkup, Config.Markup.DefaultNote, "Default note style");
+
             ImGui.SameLine();
-            StyleButton("Note", "note", ref defaultMarkup, Config.Markup.DefaultNote);
+            StyleButton("Label", "label", ref labelMarkup, Config.Markup.DefaultLabel, "Default label style");
+
+            ImGui.Checkbox("Note prefix", ref notePrefix);
+            if (notePrefix)
+            {
+                ImGui.SameLine();
+                StyleButton("Style", "notePrefix", ref notePrefixMarkup, Config.Markup.DefaultNotePrefix, "Default note prefix style");
+            }
+
+            ImGui.Checkbox("Label prefix", ref labelPrefix);
+            if (labelPrefix)
+            {
+                ImGui.SameLine();
+                StyleButton("Style", "labelPrefix", ref labelPrefixMarkup, Config.Markup.DefaultLabelPrefix, "Default label prefix style");
+            }
         }
 
         ImGui.Separator();
@@ -272,8 +300,12 @@ public class ConfigWindow : Window, IDisposable
                 config.CharacterSpecific = characterSpecific;
                 config.GlamourSpecific = glamourSpecific;
                 config.EnableStyles = enableStyles;
-                config.PrefixMarkup = prefixMarkup;
-                config.DefaultMarkup = defaultMarkup;
+                config.NotePrefix = notePrefix;
+                config.NotePrefixMarkup = notePrefixMarkup;
+                config.NoteMarkup = noteMarkup;
+                config.LabelPrefix = labelPrefix;
+                config.LabelPrefixMarkup = labelPrefixMarkup;
+                config.LabelMarkup = labelMarkup;
                 config.Save();
                 IsOpen = false;
             }
