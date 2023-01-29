@@ -22,6 +22,8 @@ public class ConfigWindow : Window, IDisposable
     private bool characterSpecific;
     private bool glamourSpecific;
     private bool enableStyles;
+    private Notes.Markup prefixMarkup = new();
+    private Notes.Markup defaultMarkup = new();
     private List<Notes.Label> labels = new();
 
     // Internal helper state
@@ -39,29 +41,17 @@ public class ConfigWindow : Window, IDisposable
     {
     }
 
-    public static T DeepClone<T>(T object2Copy)
-    {
-        var options = new JsonSerializerOptions
-        {
-            IncludeFields = true,
-        };
-        var json = JsonSerializer.Serialize(object2Copy, options);
-        if (json == null)
-            throw new NullReferenceException();
-        var obj = JsonSerializer.Deserialize<T>(json, options);
-        if (obj == null)
-            throw new NullReferenceException();
-        return obj;
-    }
-
     public override void OnOpen()
     {
         characterSpecific = notes.CharacterSpecific;
         glamourSpecific = notes.GlamourSpecific;
+        enableStyles = notes.EnableStyles;
+        prefixMarkup = Notes.DeepClone(notes.PrefixMarkup);
+        defaultMarkup = Notes.DeepClone(notes.DefaultMarkup);
 
         try
         {
-            labels = DeepClone(notes.Labels.Values.Where(l => l.Name.Length > 0).ToList());
+            labels = Notes.DeepClone(notes.Labels.Values.Where(l => l.Name.Length > 0).ToList());
         }
         catch (NullReferenceException)
         {
@@ -104,7 +94,7 @@ public class ConfigWindow : Window, IDisposable
         }).Start();
     }
 
-    public static bool MarkupUI(string id, ref Notes.Markup markup)
+    public static bool MarkupUI(string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
     {
         ImGui.Checkbox("Glow", ref markup.Glow);
         int colorKey = markup.ColorKey;
@@ -116,7 +106,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         var x = ImGui.GetStyle().Colors[(int)ImGuiCol.NavHighlight];
         ImGui.PushStyleColor(ImGuiCol.Text, x);
-        ImGui.Text("Click here");
+        ImGui.Text("Color Key");
         if (ImGui.IsItemHovered())
         {
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -132,7 +122,27 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.PopStyleColor();
 
+        if (ImGui.Button("Default"))
+        {
+            markup.ColorKey = defaultMarkup.ColorKey;
+            markup.Glow = defaultMarkup.Glow;
+            PluginLog.Debug($"Default: {markup.ColorKey}:{markup.Glow}");
+        }
+
         return true;
+    }
+
+    public void StyleButton(string label, string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
+    {
+        var popupId = $"popup{id}";
+        if (ImGui.Button($"{label}##{id}"))
+            ImGui.OpenPopup(popupId);
+
+        if (ImGui.BeginPopup(popupId))
+        {
+            MarkupUI($"markup{id}", ref markup, defaultMarkup);
+            ImGui.EndPopup();
+        }
     }
 
     public override void Draw()
@@ -159,6 +169,14 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
             ImGui.SetTooltip("Enable label/note styling (experimental)");
+        }
+
+        if (enableStyles)
+        {
+            ImGui.SameLine();
+            StyleButton("Prefix", "prefix", ref prefixMarkup, Notes.Markup.DefaultPrefix);
+            ImGui.SameLine();
+            StyleButton("Note", "note", ref defaultMarkup, Notes.Markup.DefaultNote);
         }
 
         ImGui.Separator();
@@ -190,12 +208,10 @@ public class ConfigWindow : Window, IDisposable
                 ImGui.SetTooltip("Add this label to the item menu");
             }
 
-            var popupId = $"stylePopup{i}";
             if (enableStyles)
             {
                 ImGui.SameLine();
-                if (ImGui.Button($"Style##buttonStyle{i}"))
-                    ImGui.OpenPopup(popupId);
+                StyleButton("Style", $"style{i}", ref labels[i].Markup, new());
             }
 
             ImGui.SameLine();
@@ -224,12 +240,6 @@ public class ConfigWindow : Window, IDisposable
             }
 
             ImGui.PopItemWidth();
-
-            if (enableStyles && ImGui.BeginPopup(popupId))
-            {
-                MarkupUI($"##markup{i}", ref labels[i].Markup);
-                ImGui.EndPopup();
-            }
         }
         var saveClicked = ImGui.Button("Save");
 
@@ -251,6 +261,9 @@ public class ConfigWindow : Window, IDisposable
                 notes.CharacterSpecific = characterSpecific;
                 notes.GlamourSpecific = glamourSpecific;
                 notes.EnableStyles = enableStyles;
+                notes.PrefixMarkup = prefixMarkup;
+                notes.DefaultMarkup = defaultMarkup;
+                notes.Save();
                 IsOpen = false;
             }
             catch (Exception x)

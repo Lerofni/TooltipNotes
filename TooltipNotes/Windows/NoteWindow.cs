@@ -15,7 +15,7 @@ public class NoteWindow : Window, IDisposable
     private readonly Notes notes;
     private bool focusNoteField = false;
     private string noteKey = "";
-    private string text = "";
+    private Notes.Note note = new();
 
     public NoteWindow(Notes notes) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -39,8 +39,21 @@ public class NoteWindow : Window, IDisposable
         }
 
         ImGui.PushItemWidth(350);
-        var enterPressed = ImGui.InputText("", ref text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
+        var enterPressed = ImGui.InputText("", ref note.Text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
+        var popupId = "editNoteStyle";
+        if (notes.EnableStyles)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button($"Style"))
+                ImGui.OpenPopup(popupId);
+        }
         ImGui.PopItemWidth();
+
+        if (notes.EnableStyles && ImGui.BeginPopup(popupId))
+        {
+            ConfigWindow.MarkupUI("markup", ref note.Markup, new());
+            ImGui.EndPopup();
+        }
 
         // Check if the user pressed ESC
         // https://github.com/ocornut/imgui/issues/2620#issuecomment-501136289
@@ -52,9 +65,9 @@ public class NoteWindow : Window, IDisposable
         {
             if (ImGui.Button("Save") || enterPressed)
             {
-                if (!string.IsNullOrEmpty(text))
+                if (!string.IsNullOrEmpty(note.Text))
                 {
-                    notes[noteKey] = text;
+                    notes[noteKey] = note;
                 }
                 else
                 {
@@ -75,11 +88,11 @@ public class NoteWindow : Window, IDisposable
         this.noteKey = noteKey;
         if (notes.ContainsKey(noteKey))
         {
-            text = notes[noteKey];
+            note = Notes.DeepClone(notes[noteKey]);
         }
         else
         {
-            text = "";
+            note = new();
         }
     }
 }

@@ -133,7 +133,7 @@ namespace NotesPlugin
                 lastNoteKey += $"~{glamourName}";
             }
 
-            if (Notes.TryGetValue(lastNoteKey, out var noteText))
+            if (Notes.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
                 var description = new SeStringBuilder();
@@ -150,12 +150,49 @@ namespace NotesPlugin
                 // Data (the 'key' is the 'colorKey' parameter)
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
-                description.AddUiForeground(1);
-                description.AddUiGlow(60);
-                description.Append("Note: ");
-                description.AddUiGlowOff();
-                description.Append(noteText);
-                description.AddUiForegroundOff();
+
+                void AppendMarkup(Notes.Markup markup, string text)
+                {
+                    if (markup.ColorKey >= 580)
+                    {
+                        // Fall back to default style
+                        markup = Notes.DefaultMarkup;
+                    }
+
+                    if (markup.Glow)
+                    {
+                        description.AddUiForeground(1);
+                        description.AddUiGlow(markup.ColorKey);
+                    }
+                    else
+                    {
+                        description.AddUiForeground(markup.ColorKey);
+                    }
+
+                    description.Append(text);
+
+                    if (markup.Glow)
+                    {
+                        description.AddUiGlowOff();
+                    }
+
+                    description.AddUiForegroundOff();
+                }
+
+                if (Notes.EnableStyles)
+                {
+                    AppendMarkup(Notes.PrefixMarkup, "Note: ");
+                    AppendMarkup(note.Markup, note.Text);
+                }
+                else
+                {
+                    description.AddUiForeground(1);
+                    description.AddUiGlow(60);
+                    description.Append("Note: ");
+                    description.AddUiGlowOff();
+                    description.Append(note.Text);
+                    description.AddUiForegroundOff();
+                }
 
                 // If we prepend the note, add some newlines before the original data
                 if (!appendNote)

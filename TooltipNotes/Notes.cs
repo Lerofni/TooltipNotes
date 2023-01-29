@@ -21,6 +21,18 @@ namespace NotesPlugin
         {
             public ushort ColorKey = ushort.MaxValue;
             public bool Glow = false;
+
+            public static Markup DefaultPrefix => new()
+            {
+                ColorKey = 60,
+                Glow = true,
+            };
+
+            public static Markup DefaultNote => new()
+            {
+                ColorKey = 1,
+                Glow = false,
+            };
         }
 
         public class Label
@@ -44,6 +56,8 @@ namespace NotesPlugin
             public bool CharacterSpecific = true;
             public bool GlamourSpecific = true;
             public bool EnableStyles = false;
+            public Markup PrefixMarkup = Markup.DefaultPrefix;
+            public Markup DefaultMarkup = Markup.DefaultNote;
             public Dictionary<string, Label> Labels = new();
             public readonly Dictionary<string, Note> Notes = new();
         }
@@ -53,6 +67,9 @@ namespace NotesPlugin
         public bool CharacterSpecific { get => data.CharacterSpecific; set => data.CharacterSpecific = value; }
         public bool GlamourSpecific { get => data.GlamourSpecific; set => data.GlamourSpecific = value; }
         public bool EnableStyles { get => data.EnableStyles; set => data.EnableStyles = value; }
+        public Markup PrefixMarkup { get => data.PrefixMarkup; set => data.PrefixMarkup = value; }
+        public Markup DefaultMarkup { get => data.DefaultMarkup; set => data.DefaultMarkup = value; }
+
         public Dictionary<string, Label> Labels
         {
             get => data.Labels;
@@ -80,6 +97,21 @@ namespace NotesPlugin
             }
         }
 
+        public static T DeepClone<T>(T object2Copy)
+        {
+            var options = new JsonSerializerOptions
+            {
+                IncludeFields = true,
+            };
+            var json = JsonSerializer.Serialize(object2Copy, options);
+            if (json == null)
+                throw new NullReferenceException();
+            var obj = JsonSerializer.Deserialize<T>(json, options);
+            if (obj == null)
+                throw new NullReferenceException();
+            return obj;
+        }
+
         public void Save()
         {
             try
@@ -93,19 +125,15 @@ namespace NotesPlugin
             }
         }
 
-        public string this[string noteKey]
+        public Note this[string noteKey]
         {
             get
             {
-                var note = data.Notes[noteKey];
-                return note.Text;
+                return data.Notes[noteKey];
             }
             set
             {
-                data.Notes[noteKey] = new Note
-                {
-                    Text = value,
-                };
+                data.Notes[noteKey] = value;
                 Save();
             }
         }
@@ -115,16 +143,9 @@ namespace NotesPlugin
             return data.Notes.ContainsKey(notekey);
         }
 
-        public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out string value)
+        public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out Note value)
         {
-            if (!data.Notes.TryGetValue(notekey, out var note))
-            {
-                value = null;
-                return false;
-            }
-
-            value = note.Text;
-            return true;
+            return data.Notes.TryGetValue(notekey, out value);
         }
 
         public bool Remove(string noteKey)
