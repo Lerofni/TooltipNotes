@@ -61,7 +61,6 @@ public class NoteWindow : Window, IDisposable
                 {
                     plugin.Notes.Remove(noteKey);
                 }
-                text = "";
                 IsOpen = false;
             }
         }
@@ -76,6 +75,10 @@ public class NoteWindow : Window, IDisposable
         if (plugin.Notes.ContainsKey(noteKey))
         {
             text = plugin.Notes[noteKey];
+        }
+        else
+        {
+            text = "";
         }
     }
 }
