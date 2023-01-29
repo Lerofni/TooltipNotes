@@ -7,33 +7,76 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Plugin;
+using Dalamud.Configuration;
+using Dalamud.Game.Text.SeStringHandling;
 
 namespace NotesPlugin
 {
     public class Notes
     {
-        private string path;
-        private readonly Dictionary<string, string> data = new Dictionary<string, string>(); // TODO: more generic annotation class?
+        private DalamudPluginInterface pluginInterface;
 
-        public Notes(string notesFilePath)
+        public class Markup
         {
-            path = notesFilePath;
+            public ushort ColorKey = ushort.MaxValue;
+            public bool Glow = false;
+        }
+
+        public class Label
+        {
+            public string Name = "";
+            public bool ShowInMenu = false;
+            public Markup Markup = new();
+        }
+
+        public class Note
+        {
+            public string Text = "";
+            public Markup Markup = new();
+            public List<string> Labels = new();
+        }
+
+        private class Data : IPluginConfiguration
+        {
+            public int Version { get; set; } = 0;
+
+            public bool CharacterSpecific = true;
+            public bool GlamourSpecific = true;
+            public bool EnableStyles = false;
+            public Dictionary<string, Label> Labels = new();
+            public readonly Dictionary<string, Note> Notes = new();
+        }
+
+        private readonly Data data = new();
+
+        public bool CharacterSpecific { get => data.CharacterSpecific; set => data.CharacterSpecific = value; }
+        public bool GlamourSpecific { get => data.GlamourSpecific; set => data.GlamourSpecific = value; }
+        public bool EnableStyles { get => data.EnableStyles; set => data.EnableStyles = value; }
+        public Dictionary<string, Label> Labels
+        {
+            get => data.Labels;
+            set
+            {
+                data.Labels = value;
+                Save();
+            }
+        }
+
+        public Notes(DalamudPluginInterface pluginInterface)
+        {
+            this.pluginInterface = pluginInterface;
 
             try
             {
-                if (File.Exists(path))
-                {
-                    string jsonString = File.ReadAllText(path);
-                    var deserialized = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
-                    if (deserialized == null)
-                        throw new NullReferenceException();
-                    data = deserialized;
-                    PluginLog.Debug("Notes.json loaded successfully");
-                }
+                var pluginConfig = pluginInterface.GetPluginConfig();
+                if (pluginConfig is Data d)
+                    data = d;
+                PluginLog.Debug("Configuration loaded successfully!");
             }
             catch
             {
-                PluginLog.Error("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
+                PluginLog.Error("Configuration could not be loaded");
             }
         }
 
@@ -41,13 +84,12 @@ namespace NotesPlugin
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
-                File.WriteAllText(path, json);
-                PluginLog.Debug("Notes successfully edited");
+                pluginInterface.SavePluginConfig(data);
+                PluginLog.Debug("Configuration saved successfully!");
             }
             catch
             {
-                PluginLog.Error("Error saving notes");
+                PluginLog.Error("Configuration could not be saved");
             }
         }
 
@@ -55,28 +97,39 @@ namespace NotesPlugin
         {
             get
             {
-                return data[noteKey];
+                var note = data.Notes[noteKey];
+                return note.Text;
             }
             set
             {
-                data[noteKey] = value;
+                data.Notes[noteKey] = new Note
+                {
+                    Text = value,
+                };
                 Save();
             }
         }
 
         public bool ContainsKey(string notekey)
         {
-            return data.ContainsKey(notekey);
+            return data.Notes.ContainsKey(notekey);
         }
 
         public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out string value)
         {
-            return data.TryGetValue(notekey, out value);
+            if (!data.Notes.TryGetValue(notekey, out var note))
+            {
+                value = null;
+                return false;
+            }
+
+            value = note.Text;
+            return true;
         }
 
         public bool Remove(string noteKey)
         {
-            var removed = data.Remove(noteKey);
+            var removed = data.Notes.Remove(noteKey);
             Save();
             return removed;
         }

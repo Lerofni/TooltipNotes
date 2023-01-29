@@ -14,6 +14,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dalamud.Logging;
+using Dalamud.Game.ClientState;
 
 namespace NotesPlugin
 {
@@ -27,29 +28,38 @@ namespace NotesPlugin
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
 
         private readonly DalamudContextMenu contextMenuBase;
-        private DalamudPluginInterface PluginInterface { get; init; }
+        private readonly DalamudPluginInterface pluginInterface;
 
-        private WindowSystem windowSystem = new("TooltipNotes");
+        private WindowSystem windowSystem;
 
-        private NoteWindow noteWindow { get; init; }
+        private readonly NoteWindow noteWindow;
+        private readonly ConfigWindow configWindow;
 
         public readonly Notes Notes;
         private string lastNoteKey = "";
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static ClientState? ClientState { get; private set; }
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            PluginInterface = pluginInterface;
+            this.pluginInterface = pluginInterface;
 
-            var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
-            Notes = new Notes(filepath);
+            Notes = new Notes(this.pluginInterface);
+
+            windowSystem = new(Name);
 
             noteWindow = new NoteWindow(Notes);
-
             windowSystem.AddWindow(noteWindow);
 
-            PluginInterface.UiBuilder.Draw += DrawUI;
+            configWindow = new ConfigWindow(Name, Notes);
+            windowSystem.AddWindow(configWindow);
+
+            this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
+            pluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
 
             XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
@@ -71,11 +81,6 @@ namespace NotesPlugin
             XivCommon.Dispose();
         }
 
-        private void DrawUI()
-        {
-            windowSystem.Draw();
-        }
-
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
             noteWindow.Edit(lastNoteKey);
@@ -93,7 +98,7 @@ namespace NotesPlugin
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
-            var glamourName = itemTooltip[ItemTooltipString.GlamourName];
+            var glamourName = itemTooltip[ItemTooltipString.GlamourName].TextValue;
 
             ItemTooltipString tooltipField;
             var appendNote = true;
@@ -117,7 +122,17 @@ namespace NotesPlugin
                 return;
             }
 
-            lastNoteKey = $"{glamourName}{itemid}";
+            if (Notes.CharacterSpecific)
+            {
+                var characterId = ClientState?.LocalContentId ?? 0;
+                lastNoteKey = $"{characterId:X16}-";
+            }
+            lastNoteKey += itemid;
+            if (Notes.GlamourSpecific && glamourName.Length > 0)
+            {
+                lastNoteKey += $"~{glamourName}";
+            }
+
             if (Notes.TryGetValue(lastNoteKey, out var noteText))
             {
                 var originalData = itemTooltip[tooltipField];
