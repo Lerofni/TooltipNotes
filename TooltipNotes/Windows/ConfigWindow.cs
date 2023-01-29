@@ -170,13 +170,15 @@ public class ConfigWindow : Window, IDisposable
         PalettePicker($"Color:", ForegroundColors, ref markup.ColorKey);
         PalettePicker($"Glow:", GlowColors, ref markup.GlowColorKey);
 
+        var close = ImGui.Button("Close");
+        ImGui.SameLine();
         if (ImGui.Button("Default"))
         {
             markup.ColorKey = defaultMarkup.ColorKey;
             markup.GlowColorKey = defaultMarkup.GlowColorKey;
         }
 
-        return true;
+        return close;
     }
 
     public static void StyleButton(string label, string id, ref Config.Markup markup, Config.Markup defaultMarkup, string tooltip = "")
@@ -192,7 +194,8 @@ public class ConfigWindow : Window, IDisposable
 
         if (ImGui.BeginPopup(popupId))
         {
-            MarkupUI($"markup{id}", ref markup, defaultMarkup);
+            if (MarkupUI($"markup{id}", ref markup, defaultMarkup))
+                ImGui.CloseCurrentPopup();
             ImGui.EndPopup();
         }
     }
