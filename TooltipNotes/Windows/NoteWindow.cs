@@ -59,7 +59,7 @@ public class NoteWindow : Window, IDisposable
         if (config.EnableStyles)
         {
             ImGui.SameLine();
-            ConfigWindow.StyleButton("Style", "note", ref note.Markup, new());
+            ConfigWindow.StyleButton("Colors", "note", ref note.Markup, new(), "Custom colors for this note alone");
         }
 
         if (labels.Count > 0)
