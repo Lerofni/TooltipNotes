@@ -12,12 +12,12 @@ namespace NotesPlugin.Windows;
 
 public class NoteWindow : Window, IDisposable
 {
-    private readonly Notes notes;
+    private readonly Config notes;
     private bool focusNoteField = false;
     private string noteKey = "";
-    private Notes.Note note = new();
+    private Config.Note note = new();
 
-    public NoteWindow(Notes notes) : base(
+    public NoteWindow(Config notes) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.notes = notes;
@@ -79,7 +79,7 @@ public class NoteWindow : Window, IDisposable
         this.noteKey = noteKey;
         if (notes.ContainsKey(noteKey))
         {
-            note = Notes.DeepClone(notes[noteKey]);
+            note = Config.DeepClone(notes[noteKey]);
         }
         else
         {

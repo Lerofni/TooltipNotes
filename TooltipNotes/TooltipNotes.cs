@@ -35,7 +35,7 @@ namespace NotesPlugin
         private readonly NoteWindow noteWindow;
         private readonly ConfigWindow configWindow;
 
-        public readonly Notes Notes;
+        public readonly Config Notes;
         private string lastNoteKey = "";
 
         [PluginService]
@@ -48,7 +48,19 @@ namespace NotesPlugin
         {
             this.pluginInterface = pluginInterface;
 
-            Notes = new Notes(this.pluginInterface);
+            Notes = new Config();
+            try
+            {
+                var pluginConfig = pluginInterface.GetPluginConfig();
+                if (pluginConfig is Config d)
+                    Notes = d;
+                PluginLog.Debug("Configuration loaded successfully!");
+            }
+            catch
+            {
+                PluginLog.Error("Configuration could not be loaded");
+            }
+            Notes.PluginInterface = this.pluginInterface;
 
             windowSystem = new(Name);
 
@@ -151,7 +163,7 @@ namespace NotesPlugin
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
 
-                void AppendMarkup(Notes.Markup markup, string text)
+                void AppendMarkup(Config.Markup markup, string text)
                 {
                     if (markup.ColorKey >= 580)
                     {

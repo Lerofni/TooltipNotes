@@ -16,21 +16,21 @@ namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private readonly Notes notes;
+    private readonly Config notes;
 
     // Config state
     private bool characterSpecific;
     private bool glamourSpecific;
     private bool enableStyles;
-    private Notes.Markup prefixMarkup = new();
-    private Notes.Markup defaultMarkup = new();
-    private List<Notes.Label> labels = new();
+    private Config.Markup prefixMarkup = new();
+    private Config.Markup defaultMarkup = new();
+    private List<Config.Label> labels = new();
 
     // Internal helper state
     private int focusLabelIndex = -1;
     private string errorMessage = "";
 
-    public ConfigWindow(string pluginName, Notes notes) : base(
+    public ConfigWindow(string pluginName, Config notes) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.notes = notes;
@@ -46,17 +46,17 @@ public class ConfigWindow : Window, IDisposable
         characterSpecific = notes.CharacterSpecific;
         glamourSpecific = notes.GlamourSpecific;
         enableStyles = notes.EnableStyles;
-        prefixMarkup = Notes.DeepClone(notes.PrefixMarkup);
-        defaultMarkup = Notes.DeepClone(notes.DefaultMarkup);
+        prefixMarkup = Config.DeepClone(notes.PrefixMarkup);
+        defaultMarkup = Config.DeepClone(notes.DefaultMarkup);
 
         try
         {
-            labels = Notes.DeepClone(notes.Labels.Values.Where(l => l.Name.Length > 0).ToList());
+            labels = Config.DeepClone(notes.Labels.Values.Where(l => l.Name.Length > 0).ToList());
         }
         catch (NullReferenceException)
         {
         }
-        labels.Add(new Notes.Label());
+        labels.Add(new Config.Label());
 
         focusLabelIndex = labels.Count - 1;
         errorMessage = "";
@@ -94,7 +94,7 @@ public class ConfigWindow : Window, IDisposable
         }).Start();
     }
 
-    public static bool MarkupUI(string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
+    public static bool MarkupUI(string id, ref Config.Markup markup, Config.Markup defaultMarkup)
     {
         ImGui.Checkbox("Glow", ref markup.Glow);
         int colorKey = markup.ColorKey;
@@ -132,7 +132,7 @@ public class ConfigWindow : Window, IDisposable
         return true;
     }
 
-    public static void StyleButton(string label, string id, ref Notes.Markup markup, Notes.Markup defaultMarkup)
+    public static void StyleButton(string label, string id, ref Config.Markup markup, Config.Markup defaultMarkup)
     {
         var popupId = $"popup{id}";
         if (ImGui.Button($"{label}##{id}"))
@@ -174,9 +174,9 @@ public class ConfigWindow : Window, IDisposable
         if (enableStyles)
         {
             ImGui.SameLine();
-            StyleButton("Prefix", "prefix", ref prefixMarkup, Notes.Markup.DefaultPrefix);
+            StyleButton("Prefix", "prefix", ref prefixMarkup, Config.Markup.DefaultPrefix);
             ImGui.SameLine();
-            StyleButton("Note", "note", ref defaultMarkup, Notes.Markup.DefaultNote);
+            StyleButton("Note", "note", ref defaultMarkup, Config.Markup.DefaultNote);
         }
 
         ImGui.Separator();
@@ -222,7 +222,7 @@ public class ConfigWindow : Window, IDisposable
                 if (addClicked || enterPressed)
                 {
                     focusLabelIndex = labels.Count;
-                    labels.Add(new Notes.Label());
+                    labels.Add(new Config.Label());
                 }
             }
             else
@@ -250,7 +250,7 @@ public class ConfigWindow : Window, IDisposable
                 var nonEmptyLabels = labels.Where(l => l.Name.Length > 0);
 
                 // Make sure no duplicate labels are passed
-                var labelsDict = new Dictionary<string, Notes.Label>();
+                var labelsDict = new Dictionary<string, Config.Label>();
                 foreach (var label in nonEmptyLabels)
                 {
                     if (!labelsDict.TryAdd(label.Name, label))

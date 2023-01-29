@@ -13,9 +13,12 @@ using Dalamud.Game.Text.SeStringHandling;
 
 namespace NotesPlugin
 {
-    public class Notes
+    public class Config : IPluginConfiguration
     {
-        private DalamudPluginInterface pluginInterface;
+        public int Version { get; set; } = 0;
+
+        [NonSerialized]
+        public DalamudPluginInterface? PluginInterface;
 
         public class Markup
         {
@@ -49,53 +52,13 @@ namespace NotesPlugin
             public List<string> Labels = new();
         }
 
-        private class Data : IPluginConfiguration
-        {
-            public int Version { get; set; } = 0;
-
-            public bool CharacterSpecific = true;
-            public bool GlamourSpecific = true;
-            public bool EnableStyles = false;
-            public Markup PrefixMarkup = Markup.DefaultPrefix;
-            public Markup DefaultMarkup = Markup.DefaultNote;
-            public Dictionary<string, Label> Labels = new();
-            public readonly Dictionary<string, Note> Notes = new();
-        }
-
-        private readonly Data data = new();
-
-        public bool CharacterSpecific { get => data.CharacterSpecific; set => data.CharacterSpecific = value; }
-        public bool GlamourSpecific { get => data.GlamourSpecific; set => data.GlamourSpecific = value; }
-        public bool EnableStyles { get => data.EnableStyles; set => data.EnableStyles = value; }
-        public Markup PrefixMarkup { get => data.PrefixMarkup; set => data.PrefixMarkup = value; }
-        public Markup DefaultMarkup { get => data.DefaultMarkup; set => data.DefaultMarkup = value; }
-
-        public Dictionary<string, Label> Labels
-        {
-            get => data.Labels;
-            set
-            {
-                data.Labels = value;
-                Save();
-            }
-        }
-
-        public Notes(DalamudPluginInterface pluginInterface)
-        {
-            this.pluginInterface = pluginInterface;
-
-            try
-            {
-                var pluginConfig = pluginInterface.GetPluginConfig();
-                if (pluginConfig is Data d)
-                    data = d;
-                PluginLog.Debug("Configuration loaded successfully!");
-            }
-            catch
-            {
-                PluginLog.Error("Configuration could not be loaded");
-            }
-        }
+        public bool CharacterSpecific = true;
+        public bool GlamourSpecific = true;
+        public bool EnableStyles = false;
+        public Markup PrefixMarkup = Markup.DefaultPrefix;
+        public Markup DefaultMarkup = Markup.DefaultNote;
+        public Dictionary<string, Label> Labels = new();
+        public readonly Dictionary<string, Note> Notes = new();
 
         public static T DeepClone<T>(T object2Copy)
         {
@@ -116,7 +79,7 @@ namespace NotesPlugin
         {
             try
             {
-                pluginInterface.SavePluginConfig(data);
+                PluginInterface?.SavePluginConfig(this);
                 PluginLog.Debug("Configuration saved successfully!");
             }
             catch
@@ -129,28 +92,28 @@ namespace NotesPlugin
         {
             get
             {
-                return data.Notes[noteKey];
+                return Notes[noteKey];
             }
             set
             {
-                data.Notes[noteKey] = value;
+                Notes[noteKey] = value;
                 Save();
             }
         }
 
         public bool ContainsKey(string notekey)
         {
-            return data.Notes.ContainsKey(notekey);
+            return Notes.ContainsKey(notekey);
         }
 
         public bool TryGetValue(string notekey, [MaybeNullWhen(false)] out Note value)
         {
-            return data.Notes.TryGetValue(notekey, out value);
+            return Notes.TryGetValue(notekey, out value);
         }
 
         public bool Remove(string noteKey)
         {
-            var removed = data.Notes.Remove(noteKey);
+            var removed = Notes.Remove(noteKey);
             Save();
             return removed;
         }
