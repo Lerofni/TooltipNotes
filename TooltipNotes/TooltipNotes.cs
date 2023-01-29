@@ -29,12 +29,12 @@ namespace NotesPlugin
         private readonly DalamudContextMenu contextMenuBase;
         private DalamudPluginInterface PluginInterface { get; init; }
 
-        public WindowSystem WindowSystem = new("TooltipNotes");
+        private WindowSystem windowSystem = new("TooltipNotes");
 
-        public NoteWindow NoteWindow { get; init; }
+        private NoteWindow noteWindow { get; init; }
 
         public readonly Notes Notes;
-        public string LastNoteKey = "";
+        private string lastNoteKey = "";
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
@@ -45,9 +45,9 @@ namespace NotesPlugin
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
             Notes = new Notes(filepath);
 
-            NoteWindow = new NoteWindow(this);
+            noteWindow = new NoteWindow(Notes);
 
-            WindowSystem.AddWindow(NoteWindow);
+            windowSystem.AddWindow(noteWindow);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
 
@@ -63,8 +63,8 @@ namespace NotesPlugin
 
         public void Dispose()
         {
-            WindowSystem.RemoveAllWindows();
-            NoteWindow.Dispose();
+            windowSystem.RemoveAllWindows();
+            noteWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
@@ -73,22 +73,22 @@ namespace NotesPlugin
 
         private void DrawUI()
         {
-            WindowSystem.Draw();
+            windowSystem.Draw();
         }
 
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
-            NoteWindow.Edit(LastNoteKey);
+            noteWindow.Edit(lastNoteKey);
         }
 
         public void EditNote(InventoryContextMenuItemSelectedArgs args)
         {
-            NoteWindow.Edit(LastNoteKey);
+            noteWindow.Edit(lastNoteKey);
         }
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(Notes.ContainsKey(LastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+            args.AddCustomItem(Notes.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
         }
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
@@ -117,8 +117,8 @@ namespace NotesPlugin
                 return;
             }
 
-            LastNoteKey = $"{glamourName}{itemid}";
-            if (Notes.TryGetValue(LastNoteKey, out var noteText))
+            lastNoteKey = $"{glamourName}{itemid}";
+            if (Notes.TryGetValue(lastNoteKey, out var noteText))
             {
                 var originalData = itemTooltip[tooltipField];
                 var description = new SeStringBuilder();

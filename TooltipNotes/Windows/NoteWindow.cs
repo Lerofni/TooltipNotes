@@ -12,16 +12,15 @@ namespace NotesPlugin.Windows;
 
 public class NoteWindow : Window, IDisposable
 {
-    private readonly Plugin plugin;
-
+    private readonly Notes notes;
     private bool focusNoteField = false;
     private string noteKey = "";
     private string text = "";
 
-    public NoteWindow(Plugin plugin) : base(
+    public NoteWindow(Notes notes) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
-        this.plugin = plugin;
+        this.notes = notes;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -55,13 +54,15 @@ public class NoteWindow : Window, IDisposable
             {
                 if (!string.IsNullOrEmpty(text))
                 {
-                    plugin.Notes[noteKey] = text;
+                    notes[noteKey] = text;
                 }
                 else
                 {
-                    plugin.Notes.Remove(noteKey);
+                    notes.Remove(noteKey);
                 }
                 IsOpen = false;
+
+                // TODO: trigger a tooltip refresh for a better controller experience
             }
         }
     }
@@ -72,9 +73,9 @@ public class NoteWindow : Window, IDisposable
         focusNoteField = true;
 
         this.noteKey = noteKey;
-        if (plugin.Notes.ContainsKey(noteKey))
+        if (notes.ContainsKey(noteKey))
         {
-            text = plugin.Notes[noteKey];
+            text = notes[noteKey];
         }
         else
         {
