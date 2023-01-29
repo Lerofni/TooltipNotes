@@ -161,7 +161,12 @@ namespace NotesPlugin
 
             ItemTooltipString tooltipField;
             var appendNote = true;
-            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
+            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
+            {
+                tooltipField = ItemTooltipString.Effects;
+                glamourName = "";
+            }
+            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
                 tooltipField = ItemTooltipString.EquipLevel;
             }
@@ -169,11 +174,6 @@ namespace NotesPlugin
             {
                 appendNote = false;
                 tooltipField = ItemTooltipString.Description;
-                glamourName = "";
-            }
-            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
-            {
-                tooltipField = ItemTooltipString.Effects;
                 glamourName = "";
             }
             else
