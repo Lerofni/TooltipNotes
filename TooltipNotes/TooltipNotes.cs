@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -20,174 +20,138 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
-        // private const string CommandName = "/pmy";
-        
+
         private readonly XivCommonBase XivCommon;
-        
+
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
-        
+
         private readonly DalamudContextMenu contextMenuBase;
         private DalamudPluginInterface PluginInterface { get; init; }
-        // private CommandManager CommandManager { get; init; }
-       
-        
-        
+
         public WindowSystem WindowSystem = new("TooltipNotes");
-        
-        private MainWindow MainWindow { get; init; }
-        private EditWindow EditWindow { get; init; }
-        public ulong id = 0;
-        public string currentglamid = "";
-        public string none = "";
-        public SeString glam = $"";
-        public string glamid = "";
-        public string text = "";
-        public Dictionary<string, string> Notes = new Dictionary<string, string>();
-       
+
+        private NoteWindow NoteWindow { get; init; }
+
+        public readonly Notes Notes;
+        public string EditingNoteKey = "";
+        public string LastNoteKey = "";
+
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            this.PluginInterface = pluginInterface;
-            // this.CommandManager = commandManager;
-
-           
+            PluginInterface = pluginInterface;
+            // CommandManager = commandManager;
 
             // you might normally want to embed resources and load them from the manifest stream
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
-            
-            // WindowSystem.AddWindow(new MainWindow(this,filepath));
-            // WindowSystem.AddWindow(new EditWindow(this,filepath));
-            MainWindow = new MainWindow(this, filepath);
-            EditWindow = new EditWindow(this, filepath);
-            
-            WindowSystem.AddWindow(MainWindow);
-            WindowSystem.AddWindow(EditWindow);
-           
-            this.PluginInterface.UiBuilder.Draw += DrawUI;
-           
+            Notes = new Notes(filepath);
+
+            NoteWindow = new NoteWindow(this);
+
+            WindowSystem.AddWindow(NoteWindow);
+
+            PluginInterface.UiBuilder.Draw += DrawUI;
+
             XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
             contextMenuBase = new DalamudContextMenu();
             inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload("Add Note")),AddNote , true);
+                new SeString(new TextPayload("Add Note")), AddNote, true);
             inventoryContextMenuItem2 = new InventoryContextMenuItem(
-                new SeString(new TextPayload("Edit Note")),EditNote , true);
+                new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-
-            if (File.Exists(filepath))
-            {
-                string jsonString = File.ReadAllText(filepath);
-                Notes = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
-                PluginLog.Debug("Notes.json loaded successfully");
-            }
-            else
-            {
-                PluginLog.Debug("Notes.json couldn't be loaded or doesn't exist(should resolve upon adding a note");
-            }
-
         }
 
         public void Dispose()
         {
-            this.WindowSystem.RemoveAllWindows();
-            MainWindow.Dispose();
-            EditWindow.Dispose();
-            // this.CommandManager.RemoveHandler(CommandName);
+            WindowSystem.RemoveAllWindows();
+            NoteWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
-            
-        }
-
-        private void OnCommand(string command, string args)
-        {
-            // in response to the slash command, just display our main ui
-            // WindowSystem.GetWindow("Note Window").IsOpen = true;
+            XivCommon.Dispose();
         }
 
         private void DrawUI()
         {
-            this.WindowSystem.Draw();
+            WindowSystem.Draw();
+        }
+
+        private void editNote()
+        {
+            EditingNoteKey = LastNoteKey;
+            NoteWindow.IsOpen = true;
+            if (Notes.ContainsKey(EditingNoteKey))
+                NoteWindow.Note = Notes[EditingNoteKey];
         }
 
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
-            currentglamid = glamid;
-            MainWindow.IsOpen = true;
+            editNote();
         }
-        
+
         public void EditNote(InventoryContextMenuItemSelectedArgs args)
         {
-            currentglamid = glamid;
-            EditWindow.IsOpen = true;
-            EditWindow.Note = Notes[currentglamid];
+            editNote();
         }
-
-
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(Notes.TryGetValue(glamid, out none) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
-            
+            args.AddCustomItem(Notes.ContainsKey(LastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
         }
+
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
-            string value = "";
-            id = itemid;
-            // PluginLog.Debug($"{glamid}");
-            ItemTooltipString itemTooltipString;
-            ItemTooltipString itemTooltipString1;
-            
-            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
+            var glam = itemTooltip[ItemTooltipString.GlamourName];
+
+            ItemTooltipString tooltipField;
+
+            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
-                itemTooltipString = ItemTooltipString.Description;
-                itemTooltipString1 = ItemTooltipString.GlamourName;
-                glam = "";
+                tooltipField = ItemTooltipString.EquipLevel;
             }
-            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
+            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
             {
-                itemTooltipString = ItemTooltipString.EquipLevel;
-                itemTooltipString1 = ItemTooltipString.GlamourName;
-                 
-                 
-                
+                tooltipField = ItemTooltipString.Description;
+                glam = "";
             }
             else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
             {
-                itemTooltipString = ItemTooltipString.Effects;
-                itemTooltipString1 = ItemTooltipString.GlamourName;
+                tooltipField = ItemTooltipString.Effects;
                 glam = "";
             }
             else
             {
                 return;
             }
-            glam = itemTooltip[itemTooltipString1];
-            glamid = string.Format("{0}{1}", glam, id.ToString());
-            if (glamid.Length > 8)
+
+            LastNoteKey = string.Format("{0}{1}", glam, itemid.ToString());
+            if (LastNoteKey.Length > 8)
             {
-                glamid = glamid.Remove(0, 2);
+                LastNoteKey = LastNoteKey.Remove(0, 2);
             }
-            var description = itemTooltip[itemTooltipString];
-            
-            if (Notes.TryGetValue(glamid, out value) && value != "")
+
+            var description = new SeStringBuilder();
+            description.Append(itemTooltip[tooltipField]);
+
+            if (Notes.TryGetValue(LastNoteKey, out var noteText))
             {
-                text = $"\n\nNote: \n {value} \n";
-                var test = new List<Payload>
-                {
-                    new UIForegroundPayload(1),
-                    new UIGlowPayload(0),
-                    new TextPayload(text),
-                    new UIForegroundPayload(0),
-                    new UIGlowPayload(0),
-                };
-                description = description.Append(test);
-                PluginLog.Debug($"Note should say {value}");
-                
+                // Thanks to NotNite from the Discord for the help!
+                // Color table: https://i.imgur.com/cZceCI3.png
+                // Data (the 'key' is the 'colorKey' parameter)
+                // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
+                description.AddUiForeground(1);
+                description.AddUiGlow(60);
+                //description.AddUiForegroundOff(); // not working, the whole cell is colored
+                description.Append($"\n\nNote: {noteText}");
+                description.AddUiGlowOff();
+                description.AddUiForegroundOff();
+                PluginLog.Debug($"Note should say {noteText}");
+                PluginLog.Debug($"itemid: {itemid}, glamid: {LastNoteKey}, flags:\n{string.Join("\n", itemTooltip.Fields.ToString().Split(' '))}");
             }
-            itemTooltip[itemTooltipString] = description;
+            itemTooltip[tooltipField] = description.Build();
         }
     }
 }
