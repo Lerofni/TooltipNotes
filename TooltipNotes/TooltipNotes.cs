@@ -107,13 +107,14 @@ namespace NotesPlugin
             var glam = itemTooltip[ItemTooltipString.GlamourName];
 
             ItemTooltipString tooltipField;
-
+            var appendNote = true;
             if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
                 tooltipField = ItemTooltipString.EquipLevel;
             }
             else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
             {
+                appendNote = false;
                 tooltipField = ItemTooltipString.Description;
                 glam = "";
             }
@@ -133,11 +134,18 @@ namespace NotesPlugin
                 LastNoteKey = LastNoteKey.Remove(0, 2);
             }
 
-            var description = new SeStringBuilder();
-            description.Append(itemTooltip[tooltipField]);
-
             if (Notes.TryGetValue(LastNoteKey, out var noteText))
             {
+                var originalData = itemTooltip[tooltipField];
+                var description = new SeStringBuilder();
+
+                // If we append the note to the end of the field, add the original data first
+                if (appendNote)
+                {
+                    description.Append(originalData);
+                    description.Append("\n\n");
+                }
+
                 // Thanks to NotNite from the Discord for the help!
                 // Color table: https://i.imgur.com/cZceCI3.png
                 // Data (the 'key' is the 'colorKey' parameter)
@@ -145,14 +153,21 @@ namespace NotesPlugin
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
                 description.AddUiForeground(1);
                 description.AddUiGlow(60);
-                description.Append("\n\nNote: ");
+                description.Append("Note: ");
                 description.AddUiGlowOff();
                 description.Append(noteText);
                 description.AddUiForegroundOff();
-                PluginLog.Debug($"Note should say {noteText}");
-                PluginLog.Debug($"itemid: {itemid}, glamid: {LastNoteKey}, flags:\n{string.Join("\n", itemTooltip.Fields.ToString().Split(' '))}");
+
+                // If we prepend the note, add some newlines before the original data
+                if (!appendNote)
+                {
+                    description.Append("\n\n");
+                    description.Append(originalData);
+                }
+
+                // Modify the tooltip
+                itemTooltip[tooltipField] = description.Build();
             }
-            itemTooltip[tooltipField] = description.Build();
         }
     }
 }
