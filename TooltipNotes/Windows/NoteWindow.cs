@@ -29,15 +29,6 @@ public class NoteWindow : Window, IDisposable
     {
     }
 
-    public void Close()
-    {
-        var window = plugin.NoteWindow;
-        if (window.IsOpen)
-        {
-            window.IsOpen = false;
-        }
-    }
-
     public override void Draw()
     {
         // thanks to MidoriKami from the Discord for the keyboard focus
@@ -56,7 +47,7 @@ public class NoteWindow : Window, IDisposable
         // https://github.com/ocornut/imgui/issues/2620#issuecomment-501136289
         if (ImGui.IsItemDeactivated() && ImGui.IsKeyPressed(ImGuiKey.Escape))
         {
-            Close();
+            IsOpen = false;
         }
         else
         {
@@ -71,7 +62,7 @@ public class NoteWindow : Window, IDisposable
                     plugin.Notes.Remove(noteKey);
                 }
                 text = "";
-                Close();
+                IsOpen = false;
             }
         }
     }
@@ -83,6 +74,8 @@ public class NoteWindow : Window, IDisposable
 
         this.noteKey = noteKey;
         if (plugin.Notes.ContainsKey(noteKey))
+        {
             text = plugin.Notes[noteKey];
+        }
     }
 }
