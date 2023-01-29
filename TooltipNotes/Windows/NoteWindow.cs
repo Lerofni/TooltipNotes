@@ -14,9 +14,24 @@ namespace NotesPlugin.Windows;
 public class NoteWindow : Window, IDisposable
 {
     private readonly Config config;
+
+    private class LabelState
+    {
+        public string Name;
+        public bool Checked;
+
+        public LabelState(string name, bool @checked)
+        {
+            Name = name;
+            Checked = @checked;
+        }
+    }
+
+    // UI state
     private bool focusNoteField = false;
     private string noteKey = "";
     private Config.Note note = new();
+    private List<LabelState> labels = new();
 
     public NoteWindow(Config config) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -47,6 +62,12 @@ public class NoteWindow : Window, IDisposable
             ConfigWindow.StyleButton("Style", "note", ref note.Markup, new());
         }
 
+        if (labels.Count > 0)
+        {
+            foreach (var label in labels)
+                ImGui.Checkbox(label.Name, ref label.Checked);
+        }
+
         // Check if the user pressed ESC
         // https://github.com/ocornut/imgui/issues/2620#issuecomment-501136289
         if (ImGui.IsItemDeactivated() && ImGui.IsKeyPressed(ImGuiKey.Escape))
@@ -59,6 +80,14 @@ public class NoteWindow : Window, IDisposable
             {
                 if (!string.IsNullOrEmpty(note.Text))
                 {
+                    note.Labels = new();
+                    foreach (var label in labels)
+                    {
+                        if (label.Checked)
+                        {
+                            note.Labels.Add(label.Name);
+                        }
+                    }
                     config[noteKey] = note;
                 }
                 else
@@ -85,6 +114,20 @@ public class NoteWindow : Window, IDisposable
         else
         {
             note = new();
+        }
+
+        var noteLabels = new HashSet<string>();
+        foreach (var label in note.Labels)
+        {
+            PluginLog.Debug($"note label: {label}");
+            noteLabels.Add(label);
+        }
+
+        labels = new();
+        foreach (var label in config.Labels.Values)
+        {
+            var noteHasLabel = noteLabels.Contains(label.Name);
+            labels.Add(new LabelState(label.Name, noteHasLabel));
         }
     }
 }

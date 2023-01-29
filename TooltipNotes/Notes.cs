@@ -56,6 +56,7 @@ namespace NotesPlugin
         public bool EnableStyles = false;
         public Markup PrefixMarkup = Markup.DefaultPrefix;
         public Markup DefaultMarkup = Markup.DefaultNote;
+        // TODO: replace with ordered dictionary
         public Dictionary<string, Label> Labels = new();
         public readonly Dictionary<string, Note> Notes = new();
 
