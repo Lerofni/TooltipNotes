@@ -34,7 +34,6 @@ namespace NotesPlugin
         public NoteWindow NoteWindow { get; init; }
 
         public readonly Notes Notes;
-        public string EditingNoteKey = "";
         public string LastNoteKey = "";
 
         public Plugin(
@@ -42,9 +41,7 @@ namespace NotesPlugin
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
             PluginInterface = pluginInterface;
-            // CommandManager = commandManager;
 
-            // you might normally want to embed resources and load them from the manifest stream
             var filepath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "Notes.json");
             Notes = new Notes(filepath);
 
@@ -79,22 +76,14 @@ namespace NotesPlugin
             WindowSystem.Draw();
         }
 
-        private void editNote()
-        {
-            EditingNoteKey = LastNoteKey;
-            NoteWindow.IsOpen = true;
-            if (Notes.ContainsKey(EditingNoteKey))
-                NoteWindow.Note = Notes[EditingNoteKey];
-        }
-
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
-            editNote();
+            NoteWindow.Edit(LastNoteKey);
         }
 
         public void EditNote(InventoryContextMenuItemSelectedArgs args)
         {
-            editNote();
+            NoteWindow.Edit(LastNoteKey);
         }
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
@@ -104,7 +93,7 @@ namespace NotesPlugin
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
-            var glam = itemTooltip[ItemTooltipString.GlamourName];
+            var glamourName = itemTooltip[ItemTooltipString.GlamourName];
 
             ItemTooltipString tooltipField;
             var appendNote = true;
@@ -116,24 +105,19 @@ namespace NotesPlugin
             {
                 appendNote = false;
                 tooltipField = ItemTooltipString.Description;
-                glam = "";
+                glamourName = "";
             }
             else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
             {
                 tooltipField = ItemTooltipString.Effects;
-                glam = "";
+                glamourName = "";
             }
             else
             {
                 return;
             }
 
-            LastNoteKey = string.Format("{0}{1}", glam, itemid.ToString());
-            if (LastNoteKey.Length > 8)
-            {
-                LastNoteKey = LastNoteKey.Remove(0, 2);
-            }
-
+            LastNoteKey = $"{glamourName}{itemid}";
             if (Notes.TryGetValue(LastNoteKey, out var noteText))
             {
                 var originalData = itemTooltip[tooltipField];
