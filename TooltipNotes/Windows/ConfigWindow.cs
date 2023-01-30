@@ -227,7 +227,7 @@ public class ConfigWindow : Window, IDisposable
         foreach (var i in OldNotesDict)
         {
             Config.Note note = new();
-            if (characterSpecific)
+            if (characterSpecific && characterId != 0000000000000000)
             {
                 key = $"{characterId:X16}-";
             }
@@ -236,6 +236,7 @@ public class ConfigWindow : Window, IDisposable
             config[key] = note;
             PluginLog.Debug($"Key = {i.Key}. Value = {note}");
             key = "";
+            note = null;
 
         }
         
@@ -372,14 +373,15 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Separator();
-        var UpdateConfig = ImGui.Button("Migrate Old Config");
-        if (UpdateConfig)
+
+        if (ImGui.Button("Migrate Old Notes to new system")) 
         {
             NoteConverter();
         }
         
         ImGui.Separator();
         
+
         var saveClicked = ImGui.Button("Save");
 
         if (saveClicked)
