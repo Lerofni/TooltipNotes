@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
+using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ImGuiScene;
@@ -12,30 +13,35 @@ namespace NotesPlugin.Windows;
 
 public class NoteWindow : Window, IDisposable
 {
-    private readonly Plugin plugin;
+    private readonly Config config;
 
+    private class LabelState
+    {
+        public string Name;
+        public bool Checked;
+
+        public LabelState(string name, bool @checked)
+        {
+            Name = name;
+            Checked = @checked;
+        }
+    }
+
+    // UI state
     private bool focusNoteField = false;
     private string noteKey = "";
-    private string text = "";
+    private Config.Note note = new();
+    private List<LabelState> labels = new();
 
-    public NoteWindow(Plugin plugin) : base(
+    public NoteWindow(Config config) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
-        this.plugin = plugin;
+        this.config = config;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
     public void Dispose()
     {
-    }
-
-    public void Close()
-    {
-        var window = plugin.NoteWindow;
-        if (window.IsOpen)
-        {
-            window.IsOpen = false;
-        }
     }
 
     public override void Draw()
@@ -49,29 +55,48 @@ public class NoteWindow : Window, IDisposable
         }
 
         ImGui.PushItemWidth(350);
-        var enterPressed = ImGui.InputText("", ref text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
-        ImGui.PopItemWidth();
+        var enterPressed = ImGui.InputText("", ref note.Text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
+        if (config.EnableStyles)
+        {
+            ImGui.SameLine();
+            ConfigWindow.StyleButton("Colors", "note", ref note.Markup, new(), "Custom colors for this note alone");
+        }
+
+        if (labels.Count > 0)
+        {
+            foreach (var label in labels)
+                ImGui.Checkbox(label.Name, ref label.Checked);
+        }
 
         // Check if the user pressed ESC
         // https://github.com/ocornut/imgui/issues/2620#issuecomment-501136289
         if (ImGui.IsItemDeactivated() && ImGui.IsKeyPressed(ImGuiKey.Escape))
         {
-            Close();
+            IsOpen = false;
         }
         else
         {
             if (ImGui.Button("Save") || enterPressed)
             {
-                if (!string.IsNullOrEmpty(text))
+                if (!string.IsNullOrEmpty(note.Text) || note.Labels.Count > 0)
                 {
-                    plugin.Notes[noteKey] = text;
+                    note.Labels = new();
+                    foreach (var label in labels)
+                    {
+                        if (label.Checked)
+                        {
+                            note.Labels.Add(label.Name);
+                        }
+                    }
+                    config[noteKey] = note;
                 }
                 else
                 {
-                    plugin.Notes.Remove(noteKey);
+                    config.Remove(noteKey);
                 }
-                text = "";
-                Close();
+                IsOpen = false;
+
+                // TODO: trigger a tooltip refresh for a better controller experience
             }
         }
     }
@@ -82,7 +107,26 @@ public class NoteWindow : Window, IDisposable
         focusNoteField = true;
 
         this.noteKey = noteKey;
-        if (plugin.Notes.ContainsKey(noteKey))
-            text = plugin.Notes[noteKey];
+        if (config.ContainsKey(noteKey))
+        {
+            note = Config.DeepClone(config[noteKey]);
+        }
+        else
+        {
+            note = new();
+        }
+
+        var noteLabels = new HashSet<string>();
+        foreach (var label in note.Labels)
+        {
+            noteLabels.Add(label);
+        }
+
+        labels = new();
+        foreach (var label in config.Labels.Values)
+        {
+            var noteHasLabel = noteLabels.Contains(label.Name);
+            labels.Add(new LabelState(label.Name, noteHasLabel));
+        }
     }
 }

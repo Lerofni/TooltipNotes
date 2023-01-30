@@ -14,43 +14,101 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dalamud.Logging;
+using Dalamud.Game.ClientState;
+using Dalamud.Data;
+using Dalamud.Game;
+using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
 {
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
+        
 
         private readonly XivCommonBase XivCommon;
 
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
-
+        
         private readonly DalamudContextMenu contextMenuBase;
-        private DalamudPluginInterface PluginInterface { get; init; }
+        private readonly DalamudPluginInterface pluginInterface;
 
-        public WindowSystem WindowSystem = new("TooltipNotes");
+        private WindowSystem windowSystem;
 
-        public NoteWindow NoteWindow { get; init; }
+        private readonly NoteWindow noteWindow;
+        private readonly ConfigWindow configWindow;
 
-        public readonly Notes Notes;
-        public string LastNoteKey = "";
+        public readonly Config Config;
+        private string lastNoteKey = "";
+        public string oldpluginConfig = "";
+        public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
+        private Config.Note note = new();
+        private ulong characterId = 0;
+        
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static ClientState? ClientState { get; private set; }
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static DataManager? DataManager { get; private set; }
 
         public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
         {
-            PluginInterface = pluginInterface;
-
-            var filepath = Path.Combine(PluginInterface.GetPluginConfigDirectory(), "Notes.json");
-            Notes = new Notes(filepath);
+            this.pluginInterface = pluginInterface;
             
 
-            NoteWindow = new NoteWindow(this);
 
-            WindowSystem.AddWindow(NoteWindow);
+            ConfigWindow.ForegroundColors.Clear();
+            ConfigWindow.GlowColors.Clear();
 
-            PluginInterface.UiBuilder.Draw += DrawUI;
+
+            if (DataManager != null)
+            {
+                var colorSheet = DataManager.GetExcelSheet<UIColor>();
+                if (colorSheet != null)
+                {
+                    for (var i = 0u; i < colorSheet.RowCount; i++)
+                    {
+                        var row = colorSheet.GetRow(i);
+                        if (row != null)
+                        {
+                            ConfigWindow.ForegroundColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIForeground));
+                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIGlow));
+                        }
+                    }
+                }
+            }
+
+            Config = new Config();
+            try
+            {
+                var pluginConfig = pluginInterface.GetPluginConfig();
+                if (pluginConfig is Config d)
+                    Config = d;
+                PluginLog.Debug("Configuration loaded successfully!");
+            }
+            catch
+            {
+                PluginLog.Error("Configuration could not be loaded");
+            }
+            Config.PluginInterface = this.pluginInterface;
+            oldpluginConfig = Path.Combine(pluginInterface.GetPluginConfigDirectory(), "Notes.json");
+            
+            // PluginLog.Debug($"{oldpluginConfig}");
+            windowSystem = new(Name);
+
+            noteWindow = new NoteWindow(Config);
+            windowSystem.AddWindow(noteWindow);
+            characterId = ClientState?.LocalContentId ?? 0;
+            configWindow = new ConfigWindow(Name, Config,oldpluginConfig,characterId);
+            windowSystem.AddWindow(configWindow);
+
+            this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
+            pluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
 
             XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
@@ -64,41 +122,90 @@ namespace NotesPlugin
 
         public void Dispose()
         {
-            WindowSystem.RemoveAllWindows();
-            NoteWindow.Dispose();
+            windowSystem.RemoveAllWindows();
+            noteWindow.Dispose();
+            configWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
             XivCommon.Dispose();
         }
 
-        private void DrawUI()
-        {
-            WindowSystem.Draw();
-        }
-
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
         {
-            NoteWindow.Edit(LastNoteKey);
+            noteWindow.Edit(lastNoteKey);
         }
 
         public void EditNote(InventoryContextMenuItemSelectedArgs args)
         {
-            NoteWindow.Edit(LastNoteKey);
+            noteWindow.Edit(lastNoteKey);
+        }
+       
+
+        private InventoryContextMenuItem createLabelContextMenuItem(string label)
+        {
+            var hasLabel = false;
+            if (Config.TryGetValue(lastNoteKey, out var note))
+            {
+                hasLabel = note.Labels.Contains(label);
+            }
+            var name = new SeString(new TextPayload($"{(hasLabel ? "Unlabel" : "Label")}: {label}"));
+            return new InventoryContextMenuItem(name, args =>
+            {
+                Config.Note note;
+                if (!Config.ContainsKey(lastNoteKey))
+                {
+                    note = new();
+                    Config[lastNoteKey] = note;
+                }
+                else
+                {
+                    note = Config[lastNoteKey];
+                }
+
+                if (hasLabel)
+                {
+                    note.Labels.Remove(label);
+                    if (note.Labels.Count == 0 && note.Text.Length == 0)
+                        Config.Remove(lastNoteKey);
+                }
+                else
+                {
+                    note.Labels.Add(label);
+                }
+                Config.Save();
+            }, true);
         }
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(Notes.ContainsKey(LastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+            args.AddCustomItem(Config.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+
+            // Updating labels while editing does not work
+            if (!noteWindow.IsOpen)
+            {
+                foreach (var label in Config.Labels.Values)
+                {
+                    if (label.ShowInMenu)
+                    {
+                        args.AddCustomItem(createLabelContextMenuItem(label.Name));
+                    }
+                }
+            }
         }
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
-            var glamourName = itemTooltip[ItemTooltipString.GlamourName];
+            var glamourName = itemTooltip[ItemTooltipString.GlamourName].TextValue;
 
             ItemTooltipString tooltipField;
             var appendNote = true;
-            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
+            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
+            {
+                tooltipField = ItemTooltipString.Effects;
+                glamourName = "";
+            }
+            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
                 tooltipField = ItemTooltipString.EquipLevel;
             }
@@ -108,18 +215,25 @@ namespace NotesPlugin
                 tooltipField = ItemTooltipString.Description;
                 glamourName = "";
             }
-            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
-            {
-                tooltipField = ItemTooltipString.Effects;
-                glamourName = "";
-            }
             else
             {
                 return;
             }
 
-            LastNoteKey = $"{glamourName}{itemid}";
-            if (Notes.TryGetValue(LastNoteKey, out var noteText))
+            if (Config.CharacterSpecific)
+            {
+                characterId = ClientState?.LocalContentId ?? 0;
+                lastNoteKey = $"{characterId:X16}-";
+            }
+            
+            
+            if (Config.GlamourSpecific && glamourName.Length > 0)
+            {
+                lastNoteKey += $"{glamourName}";
+            }
+            lastNoteKey += itemid;
+            PluginLog.Debug($"{lastNoteKey}");
+            if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
                 var description = new SeStringBuilder();
@@ -136,12 +250,68 @@ namespace NotesPlugin
                 // Data (the 'key' is the 'colorKey' parameter)
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
-                description.AddUiForeground(1);
-                description.AddUiGlow(60);
-                description.Append("Note:  ");
-                description.AddUiGlowOff();
-                description.Append(noteText);
-                description.AddUiForegroundOff();
+
+
+                void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
+                {
+                    if (markup.ColorKey == 0 && markup.GlowColorKey == 0)
+                        markup = fallbackMarkup;
+
+                    var foregroundColor = markup.ColorKey;
+                    var foregroundAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == foregroundColor)?.A ?? 0;
+                    if (foregroundAlpha == 0)
+                    {
+                        foregroundColor = fallbackMarkup.ColorKey;
+                    }
+                    description.AddUiForeground(foregroundColor);
+
+                    var glowColor = markup.GlowColorKey;
+                    var glowAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == glowColor)?.A ?? 0;
+                    description.AddUiGlow(glowColor);
+
+                    description.Append(text);
+
+                    description.AddUiGlowOff();
+
+                    description.AddUiForegroundOff();
+                }
+
+                if (note.Text.Length > 0)
+                {
+                    if (Config.NotePrefix)
+                    {
+                        AppendMarkup(Config.NotePrefixMarkup, "Note: ", Config.Markup.DefaultNotePrefix);
+                    }
+                    var noteMarkup = Config.EnableStyles ? note.Markup : new();
+                    AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
+                }
+
+                for (var i = 0; i < note.Labels.Count; i++)
+                {
+                    var label = note.Labels[i];
+                    var labelMarkup = new Config.Markup();
+                    if (Config.EnableStyles && Config.Labels.TryGetValue(label, out var labelConfig))
+                    {
+                        labelMarkup = labelConfig.Markup;
+                    }
+                    if (i == 0)
+                    {
+                        if (note.Text.Length > 0)
+                        {
+                            description.Append("\n");
+                        }
+                        if (Config.LabelPrefix)
+                        {
+                            AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
+                        }
+                    }
+                    else
+                    {
+                        AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
+                    }
+                    AppendMarkup(labelMarkup, label, Config.LabelMarkup);
+                }
+
 
                 // If we prepend the note, add some newlines before the original data
                 if (!appendNote)
@@ -152,7 +322,10 @@ namespace NotesPlugin
 
                 // Modify the tooltip
                 itemTooltip[tooltipField] = description.Build();
+                lastNoteKey = "";
             }
+
+            lastNoteKey = "";
         }
     }
 }
