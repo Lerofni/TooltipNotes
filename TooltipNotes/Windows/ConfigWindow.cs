@@ -11,12 +11,19 @@ using System.Text.Json.Serialization;
 using Dalamud.Logging;
 using Newtonsoft.Json.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
+using Dalamud.Plugin;
+using Dalamud.Game.ClientState;
+using Dalamud.IoC;
+using System.Threading;
 
 namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Config config;
+    private  DalamudPluginInterface PluginInterface { get; init; }
+    private Plugin plugin;
 
     // Config state
     private bool characterSpecific;
@@ -33,11 +40,20 @@ public class ConfigWindow : Window, IDisposable
     // Internal helper state
     private int focusLabelIndex = -1;
     private string errorMessage = "";
+    private Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
+    private string oldpluginconfig = "";
+    private ulong characterId = 0;
+    
+    [PluginService]
+    [RequiredVersion("1.0")]
+    public static ClientState? ClientState { get; private set; }
 
-    public ConfigWindow(string pluginName, Config config) : base(
+    public ConfigWindow(string pluginName, Config config, string oldpluginconfig, ulong characterId) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.config = config;
+        this.oldpluginconfig = oldpluginconfig;
+        this.characterId = characterId;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -200,6 +216,32 @@ public class ConfigWindow : Window, IDisposable
         }
     }
 
+    public void NoteConverter()
+    {
+        
+        
+        string oldjson = File.ReadAllText(oldpluginconfig);
+        // PluginLog.Debug($"{oldjson}");
+        OldNotesDict = JsonSerializer.Deserialize<Dictionary<string,string>>(oldjson);
+        var key = "";
+        foreach (var i in OldNotesDict)
+        {
+            Config.Note note = new();
+            if (characterSpecific)
+            {
+                key = $"{characterId:X16}-";
+            }
+            key += i.Key;
+            note.Text = i.Value;
+            config[key] = note;
+            PluginLog.Debug($"Key = {i.Key}. Value = {note}");
+            key = "";
+
+        }
+        
+    
+    }
+
     public override void Draw()
     {
         if (ImGui.IsKeyPressed(ImGuiKey.Escape))
@@ -330,6 +372,14 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Separator();
+        var UpdateConfig = ImGui.Button("Migrate Old Config");
+        if (UpdateConfig)
+        {
+            NoteConverter();
+        }
+        
+        ImGui.Separator();
+        
         var saveClicked = ImGui.Button("Save");
 
         if (saveClicked)

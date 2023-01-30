@@ -16,6 +16,7 @@ using System.Text.Json.Serialization;
 using Dalamud.Logging;
 using Dalamud.Game.ClientState;
 using Dalamud.Data;
+using Dalamud.Game;
 using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
@@ -23,12 +24,13 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
+        
 
         private readonly XivCommonBase XivCommon;
 
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
-
+        
         private readonly DalamudContextMenu contextMenuBase;
         private readonly DalamudPluginInterface pluginInterface;
 
@@ -39,6 +41,11 @@ namespace NotesPlugin
 
         public readonly Config Config;
         private string lastNoteKey = "";
+        public string oldpluginConfig = "";
+        public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
+        private Config.Note note = new();
+        private ulong characterId = 0;
+        
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -49,10 +56,10 @@ namespace NotesPlugin
         public static DataManager? DataManager { get; private set; }
 
         public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
         {
             this.pluginInterface = pluginInterface;
+            
 
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
@@ -87,13 +94,15 @@ namespace NotesPlugin
                 PluginLog.Error("Configuration could not be loaded");
             }
             Config.PluginInterface = this.pluginInterface;
-
+            oldpluginConfig = Path.Combine(pluginInterface.GetPluginConfigDirectory(), "Notes.json");
+            
+            // PluginLog.Debug($"{oldpluginConfig}");
             windowSystem = new(Name);
 
             noteWindow = new NoteWindow(Config);
             windowSystem.AddWindow(noteWindow);
-
-            configWindow = new ConfigWindow(Name, Config);
+            characterId = ClientState?.LocalContentId ?? 0;
+            configWindow = new ConfigWindow(Name, Config,oldpluginConfig,characterId);
             windowSystem.AddWindow(configWindow);
 
             this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
@@ -113,6 +122,7 @@ namespace NotesPlugin
         {
             windowSystem.RemoveAllWindows();
             noteWindow.Dispose();
+            configWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
@@ -128,6 +138,7 @@ namespace NotesPlugin
         {
             noteWindow.Edit(lastNoteKey);
         }
+       
 
         private InventoryContextMenuItem createLabelContextMenuItem(string label)
         {
@@ -209,15 +220,16 @@ namespace NotesPlugin
 
             if (Config.CharacterSpecific)
             {
-                var characterId = ClientState?.LocalContentId ?? 0;
+                characterId = ClientState?.LocalContentId ?? 0;
                 lastNoteKey = $"{characterId:X16}-";
             }
             lastNoteKey += itemid;
+            
             if (Config.GlamourSpecific && glamourName.Length > 0)
             {
                 lastNoteKey += $"~{glamourName}";
             }
-
+            PluginLog.Debug($"{lastNoteKey}");
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
@@ -305,7 +317,10 @@ namespace NotesPlugin
 
                 // Modify the tooltip
                 itemTooltip[tooltipField] = description.Build();
+                lastNoteKey = "";
             }
+
+            lastNoteKey = "";
         }
     }
 }
