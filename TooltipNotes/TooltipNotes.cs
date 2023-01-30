@@ -61,8 +61,10 @@ namespace NotesPlugin
             this.pluginInterface = pluginInterface;
             
 
+
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
+
 
             if (DataManager != null)
             {
@@ -249,6 +251,7 @@ namespace NotesPlugin
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
 
+
                 void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
                 {
                     if (markup.ColorKey == 0 && markup.GlowColorKey == 0)
@@ -308,6 +311,7 @@ namespace NotesPlugin
                     }
                     AppendMarkup(labelMarkup, label, Config.LabelMarkup);
                 }
+
 
                 // If we prepend the note, add some newlines before the original data
                 if (!appendNote)
