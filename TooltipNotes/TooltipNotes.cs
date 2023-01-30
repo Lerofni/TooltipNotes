@@ -223,12 +223,13 @@ namespace NotesPlugin
                 characterId = ClientState?.LocalContentId ?? 0;
                 lastNoteKey = $"{characterId:X16}-";
             }
-            lastNoteKey += itemid;
+            
             
             if (Config.GlamourSpecific && glamourName.Length > 0)
             {
-                lastNoteKey += $"~{glamourName}";
+                lastNoteKey += $"{glamourName}";
             }
+            lastNoteKey += itemid;
             PluginLog.Debug($"{lastNoteKey}");
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
