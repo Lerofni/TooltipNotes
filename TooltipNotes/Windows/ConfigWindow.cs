@@ -234,7 +234,6 @@ public class ConfigWindow : Window, IDisposable
             key += i.Key;
             note.Text = i.Value;
             config[key] = note;
-            PluginLog.Debug($"Key = {i.Key}. Value = {note}");
             key = "";
             note = null;
 

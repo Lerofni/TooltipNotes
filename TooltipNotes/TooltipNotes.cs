@@ -232,7 +232,7 @@ namespace NotesPlugin
                 lastNoteKey += $"{glamourName}";
             }
             lastNoteKey += itemid;
-            PluginLog.Debug($"{lastNoteKey}");
+            
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
