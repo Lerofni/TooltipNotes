@@ -9,15 +9,13 @@ using System.Text.Json;
 using Dalamud.Plugin;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
-
+using Dalamud.Logging;
 
 namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Config config;
-    private  DalamudPluginInterface PluginInterface { get; init; }
-    private Plugin plugin;
 
     // Config state
     private bool characterSpecific;
@@ -34,13 +32,8 @@ public class ConfigWindow : Window, IDisposable
     // Internal helper state
     private int focusLabelIndex = -1;
     private string errorMessage = "";
-    private Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
     private string oldpluginconfig = "";
     private ulong characterId = 0;
-    
-    [PluginService]
-    [RequiredVersion("1.0")]
-    public static ClientState? ClientState { get; private set; }
 
     public ConfigWindow(string pluginName, Config config, string oldpluginconfig, ulong characterId) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -79,7 +72,7 @@ public class ConfigWindow : Window, IDisposable
         focusLabelIndex = labels.Count - 1;
         errorMessage = "";
     }
-    
+
     public class ColorInfo
     {
         public ushort Index = ushort.MaxValue;
@@ -180,28 +173,28 @@ public class ConfigWindow : Window, IDisposable
 
     public void NoteConverter()
     {
-        
-        
         string oldjson = File.ReadAllText(oldpluginconfig);
-        // PluginLog.Debug($"{oldjson}");
-        OldNotesDict = JsonSerializer.Deserialize<Dictionary<string,string>>(oldjson);
-        var key = "";
-        foreach (var i in OldNotesDict)
+        var oldNotesDict = JsonSerializer.Deserialize<Dictionary<string, string>>(oldjson);
+        if (oldNotesDict == null)
+        {
+            PluginLog.Error($"Failed to deserialize: {oldpluginconfig}");
+            return;
+        }
+
+        foreach (var i in oldNotesDict)
         {
             Config.Note note = new();
-            if (characterSpecific && characterId != 0000000000000000)
+            var key = "";
+            if (characterSpecific)
             {
                 key = $"{characterId:X16}-";
             }
             key += i.Key;
             note.Text = i.Value;
             config[key] = note;
-            key = "";
-            note = null;
-
         }
-        
-    
+
+        File.Move(oldpluginconfig, oldpluginconfig + ".old", true);
     }
 
     public override void Draw()
@@ -335,13 +328,12 @@ public class ConfigWindow : Window, IDisposable
 
         ImGui.Separator();
 
-        if (ImGui.Button("Migrate Old Notes to new system")) 
+        if (File.Exists(oldpluginconfig) && ImGui.Button("Migrate Old Notes to new system"))
         {
             NoteConverter();
         }
-        
+
         ImGui.Separator();
-        
 
         var saveClicked = ImGui.Button("Save");
 

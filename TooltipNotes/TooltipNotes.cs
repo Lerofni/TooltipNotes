@@ -21,13 +21,12 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
-        
 
         private readonly XivCommonBase XivCommon;
 
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
-        
+
         private readonly DalamudContextMenu contextMenuBase;
         private readonly DalamudPluginInterface pluginInterface;
 
@@ -40,9 +39,6 @@ namespace NotesPlugin
         private string lastNoteKey = "";
         public string oldpluginConfig = "";
         public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
-        private Config.Note note = new();
-        private ulong characterId = 0;
-        
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -52,16 +48,15 @@ namespace NotesPlugin
         [RequiredVersion("1.0")]
         public static DataManager? DataManager { get; private set; }
 
+        private ulong characterId => ClientState?.LocalContentId ?? 0;
+
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
         {
             this.pluginInterface = pluginInterface;
-            
-
 
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
-
 
             if (DataManager != null)
             {
@@ -94,14 +89,12 @@ namespace NotesPlugin
             }
             Config.PluginInterface = this.pluginInterface;
             oldpluginConfig = Path.Combine(pluginInterface.GetPluginConfigDirectory(), "Notes.json");
-            
-            // PluginLog.Debug($"{oldpluginConfig}");
+
             windowSystem = new(Name);
 
             noteWindow = new NoteWindow(Config);
             windowSystem.AddWindow(noteWindow);
-            characterId = ClientState?.LocalContentId ?? 0;
-            configWindow = new ConfigWindow(Name, Config,oldpluginConfig,characterId);
+            configWindow = new ConfigWindow(Name, Config, oldpluginConfig, characterId);
             windowSystem.AddWindow(configWindow);
 
             this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
@@ -137,7 +130,6 @@ namespace NotesPlugin
         {
             noteWindow.Edit(lastNoteKey);
         }
-       
 
         private InventoryContextMenuItem createLabelContextMenuItem(string label)
         {
@@ -216,21 +208,17 @@ namespace NotesPlugin
             {
                 return;
             }
+
             lastNoteKey = itemid.ToString();
             if (Config.GlamourSpecific && glamourName.Length > 0)
             {
-                lastNoteKey = $"{glamourName}"+ lastNoteKey;
+                lastNoteKey = $"{glamourName}" + lastNoteKey;
             }
             if (Config.CharacterSpecific)
             {
-                characterId = ClientState?.LocalContentId ?? 0;
                 lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
             }
-            
-            
-            
-            
-            
+
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
@@ -248,7 +236,6 @@ namespace NotesPlugin
                 // Data (the 'key' is the 'colorKey' parameter)
                 // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
                 // Using AddUiForegroundOff doesn't work because the whole cell is colored
-
 
                 void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
                 {
@@ -310,7 +297,6 @@ namespace NotesPlugin
                     AppendMarkup(labelMarkup, label, Config.LabelMarkup);
                 }
 
-
                 // If we prepend the note, add some newlines before the original data
                 if (!appendNote)
                 {
@@ -320,10 +306,7 @@ namespace NotesPlugin
 
                 // Modify the tooltip
                 itemTooltip[tooltipField] = description.Build();
-                
             }
-
-            
         }
     }
 }
