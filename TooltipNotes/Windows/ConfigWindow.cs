@@ -5,17 +5,11 @@ using System.Numerics;
 using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using ImGuiScene;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Dalamud.Logging;
-using Newtonsoft.Json.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using Dalamud.Plugin;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
-using System.Threading;
+
 
 namespace NotesPlugin.Windows;
 
@@ -85,39 +79,7 @@ public class ConfigWindow : Window, IDisposable
         focusLabelIndex = labels.Count - 1;
         errorMessage = "";
     }
-
-    public static void AddUnderLine(Vector4 color)
-    {
-        var min = ImGui.GetItemRectMin();
-        var max = ImGui.GetItemRectMax();
-        min.Y = max.Y;
-        uint col = 0;
-        col |= (uint)(color.X * 255);
-        col |= (uint)(color.Y * 255) << 8;
-        col |= (uint)(color.Z * 255) << 16;
-        col |= (uint)(color.W * 255) << 24;
-        ImGui.GetWindowDrawList().AddLine(min, max, col, 1.0f);
-    }
-
-    public static void OpenURL(string url)
-    {
-        new System.Threading.Thread(() =>
-        {
-            try
-            {
-
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    UseShellExecute = true,
-                    FileName = url,
-                });
-            }
-            catch
-            {
-            }
-        }).Start();
-    }
-
+    
     public class ColorInfo
     {
         public ushort Index = ushort.MaxValue;

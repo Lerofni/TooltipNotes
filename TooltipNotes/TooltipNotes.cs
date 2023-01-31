@@ -8,15 +8,12 @@ using NotesPlugin.Windows;
 using XivCommon;
 using XivCommon.Functions.Tooltips;
 using Dalamud.ContextMenu;
-using Dalamud.Game.Gui;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Dalamud.Logging;
 using Dalamud.Game.ClientState;
 using Dalamud.Data;
-using Dalamud.Game;
+
 using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
@@ -219,19 +216,20 @@ namespace NotesPlugin
             {
                 return;
             }
-
+            lastNoteKey = itemid.ToString();
+            if (Config.GlamourSpecific && glamourName.Length > 0)
+            {
+                lastNoteKey = $"{glamourName}"+ lastNoteKey;
+            }
             if (Config.CharacterSpecific)
             {
                 characterId = ClientState?.LocalContentId ?? 0;
-                lastNoteKey = $"{characterId:X16}-";
+                lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
             }
             
             
-            if (Config.GlamourSpecific && glamourName.Length > 0)
-            {
-                lastNoteKey += $"{glamourName}";
-            }
-            lastNoteKey += itemid;
+            
+            
             
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
@@ -322,10 +320,10 @@ namespace NotesPlugin
 
                 // Modify the tooltip
                 itemTooltip[tooltipField] = description.Build();
-                lastNoteKey = "";
+                
             }
 
-            lastNoteKey = "";
+            
         }
     }
 }

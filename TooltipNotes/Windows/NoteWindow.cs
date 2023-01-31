@@ -1,12 +1,8 @@
 using System;
-using System.IO;
-using System.Numerics;
+
 using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using ImGuiScene;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Dalamud.Logging;
 
 namespace NotesPlugin.Windows;
