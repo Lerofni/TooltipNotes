@@ -197,19 +197,19 @@ namespace NotesPlugin
 
             ItemTooltipString tooltipField;
             var appendNote = true;
-            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
+            if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
             {
-                tooltipField = ItemTooltipString.Effects;
+                appendNote = false;
+                tooltipField = ItemTooltipString.Description;
                 glamourName = "";
             }
             else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
                 tooltipField = ItemTooltipString.EquipLevel;
             }
-            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
+            else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
             {
-                appendNote = false;
-                tooltipField = ItemTooltipString.Description;
+                tooltipField = ItemTooltipString.Effects;
                 glamourName = "";
             }
             else
