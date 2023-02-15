@@ -218,7 +218,7 @@ namespace NotesPlugin
             {
                 lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
             }
-
+            PluginLog.Debug($"ItemId: {lastNoteKey}");
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
@@ -269,6 +269,7 @@ namespace NotesPlugin
                     }
                     var noteMarkup = Config.EnableStyles ? note.Markup : new();
                     AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
+                    PluginLog.Debug($"Note should be: {note.Text}");
                 }
 
                 for (var i = 0; i < note.Labels.Count; i++)
@@ -295,6 +296,7 @@ namespace NotesPlugin
                         AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
                     }
                     AppendMarkup(labelMarkup, label, Config.LabelMarkup);
+                    PluginLog.Debug($"Label: {label}");
                 }
 
                 // If we prepend the note, add some newlines before the original data
