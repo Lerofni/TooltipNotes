@@ -1,6 +1,7 @@
 using System;
-
+using System.Linq;
 using System.Collections.Generic;
+
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Dalamud.Logging;
@@ -74,7 +75,7 @@ public class NoteWindow : Window, IDisposable
         {
             if (ImGui.Button("Save") || enterPressed)
             {
-                if (!string.IsNullOrEmpty(note.Text) || note.Labels.Count > 0)
+                if (!string.IsNullOrEmpty(note.Text) || labels.Count(label => label.Checked) > 0)
                 {
                     note.Labels = new();
                     foreach (var label in labels)
