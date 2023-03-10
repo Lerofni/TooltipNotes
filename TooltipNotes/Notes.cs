@@ -48,6 +48,7 @@ namespace NotesPlugin
         {
             public string Name = "";
             public bool ShowInMenu = false;
+            public  bool HideLabel = false;
             public Markup Markup = new();
         }
 

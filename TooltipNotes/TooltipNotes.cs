@@ -49,7 +49,20 @@ namespace NotesPlugin
         public static DataManager? DataManager { get; private set; }
 
         private ulong characterId => ClientState?.LocalContentId ?? 0;
+        private uint? CurrentClassJobId
+        {
+            get
+            {
+                if (ClientState!.IsLoggedIn && ClientState.LocalPlayer != null)
+                {
+                    return ClientState.LocalPlayer?.ClassJob.Id ?? null;
+                }
 
+                return null;
+            }
+        }
+        
+        
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
         {
@@ -175,7 +188,7 @@ namespace NotesPlugin
             {
                 foreach (var label in Config.Labels.Values)
                 {
-                    if (label.ShowInMenu)
+                    if (label.ShowInMenu && !label.HideLabel)
                     {
                         args.AddCustomItem(createLabelContextMenuItem(label.Name));
                     }
@@ -225,6 +238,7 @@ namespace NotesPlugin
                 var description = new SeStringBuilder();
 
                 // If we append the note to the end of the field, add the original data first
+                
                 if (appendNote)
                 {
                     description.Append(originalData);
@@ -271,11 +285,16 @@ namespace NotesPlugin
                     AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
                     PluginLog.Debug($"Note should be: {note.Text}");
                 }
-
+                var hidePrevious = false;
+                var labelSet = false;
                 for (var i = 0; i < note.Labels.Count; i++)
                 {
                     var label = note.Labels[i];
+                    var labelConf = Config.Labels[label];
+                    var labelHide = labelConf.HideLabel;
                     var labelMarkup = new Config.Markup();
+                    
+                    
                     if (Config.EnableStyles && Config.Labels.TryGetValue(label, out var labelConfig))
                     {
                         labelMarkup = labelConfig.Markup;
@@ -286,17 +305,43 @@ namespace NotesPlugin
                         {
                             description.Append("\n");
                         }
-                        if (Config.LabelPrefix)
+                        if (Config.LabelPrefix && !labelHide)
                         {
                             AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
+                            labelSet = true;
                         }
                     }
                     else
                     {
-                        AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);
+                        if (hidePrevious)
+                        {
+                            if (!labelSet)
+                            {
+                                AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
+                                labelSet = true;
+                            }
+                            hidePrevious = false;
+                           
+                        }
+                        else
+                        {
+                            AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);    
+                        }
+                        
                     }
-                    AppendMarkup(labelMarkup, label, Config.LabelMarkup);
-                    PluginLog.Debug($"Label: {label}");
+
+                    if (labelHide)
+                    {
+                        
+                        hidePrevious = true;
+                        continue;
+                    }
+                    else
+                    {
+                        AppendMarkup(labelMarkup, label, Config.LabelMarkup);
+                        PluginLog.Debug($"Label: {label}");
+                    }
+                    
                 }
 
                 // If we prepend the note, add some newlines before the original data

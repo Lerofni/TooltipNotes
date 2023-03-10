@@ -29,6 +29,7 @@ public class NoteWindow : Window, IDisposable
     private string noteKey = "";
     private Config.Note note = new();
     private List<LabelState> labels = new();
+    
 
     public NoteWindow(Config config) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -45,6 +46,7 @@ public class NoteWindow : Window, IDisposable
     {
         // thanks to MidoriKami from the Discord for the keyboard focus
         // Reference: https://github.com/KazWolfe/Mappy/blob/970e5ce6888d19dd9e2b9b6568c70cea71c4f059/Mappy/UserInterface/Components/MapSelect.cs#L46
+        
         if (focusNoteField)
         {
             ImGui.SetKeyboardFocusHere();
@@ -62,7 +64,17 @@ public class NoteWindow : Window, IDisposable
         if (labels.Count > 0)
         {
             foreach (var label in labels)
-                ImGui.Checkbox(label.Name, ref label.Checked);
+            {
+                Config.Label labelConfig;
+                labelConfig = config.Labels[label.Name];
+                if (!labelConfig.HideLabel)
+                {
+                    ImGui.Checkbox(label.Name, ref label.Checked);    
+                }
+                
+            }
+
+            
         }
 
         // Check if the user pressed ESC

@@ -9,7 +9,10 @@ using System.Text.Json;
 using Dalamud.Plugin;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
+using Dalamud.Game;
+using Dalamud.Game.Network;
 using Dalamud.Logging;
+
 
 namespace NotesPlugin.Windows;
 
@@ -103,7 +106,7 @@ public class ConfigWindow : Window, IDisposable
 
     public static List<ColorInfo> ForegroundColors = new();
     public static List<ColorInfo> GlowColors = new();
-
+    
     public static bool MarkupUI(string id, ref Config.Markup markup, Config.Markup defaultMarkup)
     {
         void PalettePicker(string name, List<ColorInfo> palette, ref ushort index)
@@ -196,14 +199,16 @@ public class ConfigWindow : Window, IDisposable
 
         File.Move(oldpluginconfig, oldpluginconfig + ".old", true);
     }
-
+    
     public override void Draw()
     {
+   
         if (ImGui.IsKeyPressed(ImGuiKey.Escape))
         {
             IsOpen = false;
             return;
         }
+        
 
         ImGui.Text("Settings:");
         ImGui.Checkbox("Character-specific notes", ref characterSpecific);
@@ -290,6 +295,12 @@ public class ConfigWindow : Window, IDisposable
             {
                 ImGui.SetTooltip($"Add a menu for toggling the {labelDescription} label");
             }
+            ImGui.SameLine();
+            ImGui.Checkbox($"Hide##hide{i}", ref labels[i].HideLabel);
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            {
+                ImGui.SetTooltip($"Hide the {labelDescription} label in all other menus and tooltips");
+            }
 
             if (enableStyles)
             {
@@ -334,10 +345,14 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Separator();
+        
+        
 
-        var saveClicked = ImGui.Button("Save");
+        var saveandquitClicked = ImGui.Button("Save&Quit");
+        ImGui.SameLine();
+        var saveclicked = ImGui.Button("Save");
 
-        if (saveClicked)
+        if (saveandquitClicked || saveclicked)
         {
             try
             {
@@ -378,7 +393,11 @@ public class ConfigWindow : Window, IDisposable
                     config.LabelMarkup = Config.Markup.DefaultLabel;
                 }
                 config.Save();
-                IsOpen = false;
+                if (saveandquitClicked)
+                {
+                    IsOpen = false;
+                }
+                
             }
             catch (Exception x)
             {
