@@ -21,6 +21,9 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
+        private const string openconfig = "/tnconfig";
+        private const string openallNote = "/tnallnotes";
+        private const string newNote = "/tnnote";
 
         private readonly XivCommonBase XivCommon;
 
@@ -34,7 +37,9 @@ namespace NotesPlugin
 
         private readonly NoteWindow noteWindow;
         private readonly ConfigWindow configWindow;
+        private readonly AllNotesWindow allNotesWindow;
 
+        private CommandManager CommandManager { get; init; }
         public readonly Config Config;
         private string lastNoteKey = "";
         public string oldpluginConfig = "";
@@ -64,9 +69,11 @@ namespace NotesPlugin
         
         
         public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
+            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
+            [RequiredVersion("1.0")] CommandManager commandManager)
         {
             this.pluginInterface = pluginInterface;
+            this.CommandManager = commandManager;
 
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
@@ -88,6 +95,19 @@ namespace NotesPlugin
                 }
             }
 
+            CommandManager.AddHandler(openconfig, new CommandInfo(Onopenconfig)
+            {
+                HelpMessage = "This opens the TooltipNotes Config"
+            });
+            CommandManager.AddHandler(openallNote, new CommandInfo(OnopenallNote)
+            {
+                HelpMessage = "This opens a Window with all your notes displayed"
+            });
+            CommandManager.AddHandler(newNote, new CommandInfo(OnopennewNote)
+            {
+                HelpMessage = "This lets you open a note window based on the last hovered item "
+            });
+            
             Config = new Config();
             try
             {
@@ -100,6 +120,7 @@ namespace NotesPlugin
             {
                 PluginLog.Error("Configuration could not be loaded");
             }
+            
             Config.PluginInterface = this.pluginInterface;
             oldpluginConfig = Path.Combine(pluginInterface.GetPluginConfigDirectory(), "Notes.json");
 
@@ -109,6 +130,8 @@ namespace NotesPlugin
             windowSystem.AddWindow(noteWindow);
             configWindow = new ConfigWindow(Name, Config, oldpluginConfig, characterId);
             windowSystem.AddWindow(configWindow);
+            allNotesWindow = new AllNotesWindow(Config);
+            windowSystem.AddWindow(allNotesWindow);
 
             this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
             pluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
@@ -123,15 +146,20 @@ namespace NotesPlugin
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
         }
 
+        
         public void Dispose()
         {
             windowSystem.RemoveAllWindows();
             noteWindow.Dispose();
             configWindow.Dispose();
+            allNotesWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
             XivCommon.Dispose();
+            CommandManager.RemoveHandler(openconfig);
+            CommandManager.RemoveHandler(openallNote);
+            CommandManager.RemoveHandler(newNote);
         }
 
         public void AddNote(InventoryContextMenuItemSelectedArgs args)
@@ -143,6 +171,22 @@ namespace NotesPlugin
         {
             noteWindow.Edit(lastNoteKey);
         }
+
+        public void Onopenconfig(string command, string args)
+        {
+            configWindow.IsOpen = true;
+        }
+        
+        public void OnopenallNote(string command, string args)
+        {
+            allNotesWindow.IsOpen = true;
+        }
+        
+        public void OnopennewNote(string command, string args)
+        {
+            noteWindow.Edit(lastNoteKey);
+        }
+
 
         private InventoryContextMenuItem createLabelContextMenuItem(string label)
         {

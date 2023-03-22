@@ -100,6 +100,7 @@ namespace NotesPlugin
             }
         }
 
+        
         public Note this[string noteKey]
         {
             get
@@ -113,6 +114,10 @@ namespace NotesPlugin
             }
         }
 
+        public Dictionary<string, Note> NoteDict()
+        {
+            return Notes;
+        }
         public bool ContainsKey(string notekey)
         {
             return Notes.ContainsKey(notekey);

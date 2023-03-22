@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.1.2.0</Version>
+    <Version>0.1.2.1</Version>
     <Description>A sample plugin.</Description>
     <PackageProjectUrl>https://github.com/Lerofni/TooltipNotes.git</PackageProjectUrl>
       <Configurations>Debug;Release</Configurations>
@@ -32,8 +32,8 @@
 <!--  </PropertyGroup>-->
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.10" />
-    <PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
+    <PackageReference Include="DalamudPackager" Version="2.1.11" />
+    <PackageReference Include="Dalamud.ContextMenu" Version="1.2.2" />
     <PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
