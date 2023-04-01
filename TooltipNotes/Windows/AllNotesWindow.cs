@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Dalamud.Logging;
+using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin.Windows;
 
@@ -48,7 +49,7 @@ public class AllNotesWindow : Window, IDisposable
     }
 
     
-    
+
     public override void Draw()
     {
         // thanks to MidoriKami from the Discord for the keyboard focus
@@ -59,14 +60,10 @@ public class AllNotesWindow : Window, IDisposable
             ImGui.SetKeyboardFocusHere();
             focusNoteField = false;
         }
-        
-        
-        
         foreach (var notepair in Notes)
         {
                 var noteLabels = new HashSet<string>();
-                var keyValuePair = notepair;
-                var input = keyValuePair.Key;
+                var input = notepair.Key;
                 foreach (var label in notepair.Value.Labels)
                 {
                     noteLabels.Add(label);
@@ -79,7 +76,7 @@ public class AllNotesWindow : Window, IDisposable
                 }
                 ImGui.InputText($"##{notepair.Key}", ref input,100000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
                 ImGui.SameLine();
-                ImGui.InputText($"##{notepair.Value.Text}", ref notepair.Value.Text, 10000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
+                ImGui.InputText($"##{notepair.Value.Text+notepair.Key}", ref notepair.Value.Text, 10000,  ImGuiInputTextFlags.EnterReturnsTrue| ImGuiInputTextFlags.AutoSelectAll);
                 if (config.EnableStyles)
                 {
                     ImGui.SameLine();
@@ -101,6 +98,6 @@ public class AllNotesWindow : Window, IDisposable
                 
                     
                 }
-        }
+    }
     }
 }

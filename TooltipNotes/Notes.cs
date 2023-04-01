@@ -63,6 +63,7 @@ namespace NotesPlugin
         public bool GlamourSpecific = true;
         public bool EnableStyles = false;
         public bool NotePrefix = true;
+        public bool EnableDebug = false;
         public Markup NotePrefixMarkup = Markup.DefaultNotePrefix;
         public Markup NoteMarkup = Markup.DefaultNote;
         public bool LabelPrefix = true;

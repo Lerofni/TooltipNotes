@@ -99,10 +99,10 @@ namespace NotesPlugin
             {
                 HelpMessage = "This opens the TooltipNotes Config"
             });
-            CommandManager.AddHandler(openallNote, new CommandInfo(OnopenallNote)
-            {
-                HelpMessage = "This opens a Window with all your notes displayed"
-            });
+            // CommandManager.AddHandler(openallNote, new CommandInfo(OnopenallNote)
+            // {
+            //     HelpMessage = "This opens a Window with all your notes displayed"
+            // });
             CommandManager.AddHandler(newNote, new CommandInfo(OnopennewNote)
             {
                 HelpMessage = "This lets you open a note window based on the last hovered item "
@@ -242,6 +242,7 @@ namespace NotesPlugin
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
+            var EnableDebug = Config.EnableDebug;
             var glamourName = itemTooltip[ItemTooltipString.GlamourName].TextValue;
 
             ItemTooltipString tooltipField;
@@ -275,7 +276,12 @@ namespace NotesPlugin
             {
                 lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
             }
-            PluginLog.Debug($"ItemId: {lastNoteKey}");
+
+            if (EnableDebug)
+            {
+                PluginLog.Debug($"NoteId: {lastNoteKey}");
+            }
+            
             if (Config.TryGetValue(lastNoteKey, out var note))
             {
                 var originalData = itemTooltip[tooltipField];
@@ -327,7 +333,11 @@ namespace NotesPlugin
                     }
                     var noteMarkup = Config.EnableStyles ? note.Markup : new();
                     AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
-                    PluginLog.Debug($"Note should be: {note.Text}");
+                    if (EnableDebug)
+                    {
+                        PluginLog.Debug($"Note should be: {note.Text}");
+                    }
+                    
                 }
                 var hidePrevious = false;
                 var labelSet = false;
@@ -383,6 +393,7 @@ namespace NotesPlugin
                     else
                     {
                         AppendMarkup(labelMarkup, label, Config.LabelMarkup);
+                        if(EnableDebug)
                         PluginLog.Debug($"Label: {label}");
                     }
                     

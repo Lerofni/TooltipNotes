@@ -25,6 +25,7 @@ public class ConfigWindow : Window, IDisposable
     private bool glamourSpecific;
     private bool enableStyles;
     private bool notePrefix;
+    private bool EnableDebug;
     private Config.Markup notePrefixMarkup = new();
     private Config.Markup noteMarkup = new();
     private bool labelPrefix;
@@ -62,6 +63,7 @@ public class ConfigWindow : Window, IDisposable
         labelPrefix = config.LabelPrefix;
         labelPrefixMarkup = config.LabelPrefixMarkup;
         labelMarkup = config.LabelMarkup;
+        EnableDebug = config.EnableDebug;
 
         try
         {
@@ -223,6 +225,12 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip("Changing this might hide some existing notes!");
         }
 
+        ImGui.Checkbox("Enable Debug logging", ref EnableDebug);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Enables logging the NoteId,Labels and Notes to the xllog");
+        }
+
         ImGui.Separator();
 
         ImGui.Text("Custom Colors:");
@@ -371,6 +379,7 @@ public class ConfigWindow : Window, IDisposable
                 config.GlamourSpecific = glamourSpecific;
                 config.EnableStyles = enableStyles;
                 config.NotePrefix = notePrefix;
+                config.EnableDebug = EnableDebug;
                 if (enableStyles)
                 {
                     config.NotePrefixMarkup = notePrefixMarkup;
