@@ -6,11 +6,6 @@ using System.Collections.Generic;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System.Text.Json;
-using Dalamud.Plugin;
-using Dalamud.Game.ClientState;
-using Dalamud.IoC;
-using Dalamud.Game;
-using Dalamud.Game.Network;
 using Dalamud.Logging;
 
 
@@ -25,7 +20,9 @@ public class ConfigWindow : Window, IDisposable
     private bool glamourSpecific;
     private bool enableStyles;
     private bool notePrefix;
-    private bool EnableDebug;
+    private bool enableDebug;
+    private int characterNote;
+    private int glamourNote;
     private Config.Markup notePrefixMarkup = new();
     private Config.Markup noteMarkup = new();
     private bool labelPrefix;
@@ -63,7 +60,9 @@ public class ConfigWindow : Window, IDisposable
         labelPrefix = config.LabelPrefix;
         labelPrefixMarkup = config.LabelPrefixMarkup;
         labelMarkup = config.LabelMarkup;
-        EnableDebug = config.EnableDebug;
+        enableDebug = config.EnableDebug;
+        characterNote = config.CharacterNote;
+        glamourNote = config.GlamourNote;
 
         try
         {
@@ -218,14 +217,37 @@ public class ConfigWindow : Window, IDisposable
         {
             ImGui.SetTooltip("Changing this will hide your existing notes!");
         }
-
+        ImGui.SameLine();
+        ImGui.RadioButton("##config", ref characterNote, 0);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Sets the identifying label in the allNotes window to ");
+        }
+        ImGui.SameLine();
+        ImGui.RadioButton("(CN)##config", ref characterNote, 1);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Sets the identifying label in the allNotes window to (CN)");
+        }
         ImGui.Checkbox("Glamour-specific notes", ref glamourSpecific);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
             ImGui.SetTooltip("Changing this might hide some existing notes!");
         }
+        ImGui.SameLine();
+        ImGui.RadioButton("##config", ref glamourNote, 0);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Sets the identifying label in the allNotes window to ");
+        }
+        ImGui.SameLine();
+        ImGui.RadioButton("(GN)##config", ref glamourNote, 1);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Sets the identifying label in the allNotes window to (GN)");
+        }
 
-        ImGui.Checkbox("Enable Debug logging", ref EnableDebug);
+        ImGui.Checkbox("Enable Debug logging", ref enableDebug);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
             ImGui.SetTooltip("Enables logging the NoteId,Labels and Notes to the xllog");
@@ -356,9 +378,9 @@ public class ConfigWindow : Window, IDisposable
         
         
 
-        var saveandquitClicked = ImGui.Button("Save&Quit");
+        var saveandquitClicked = ImGui.Button("Save&Quit##Config");
         ImGui.SameLine();
-        var saveclicked = ImGui.Button("Save");
+        var saveclicked = ImGui.Button("Save##Config");
 
         if (saveandquitClicked || saveclicked)
         {
@@ -379,7 +401,9 @@ public class ConfigWindow : Window, IDisposable
                 config.GlamourSpecific = glamourSpecific;
                 config.EnableStyles = enableStyles;
                 config.NotePrefix = notePrefix;
-                config.EnableDebug = EnableDebug;
+                config.EnableDebug = enableDebug;
+                config.CharacterNote = characterNote;
+                config.GlamourNote = glamourNote;
                 if (enableStyles)
                 {
                     config.NotePrefixMarkup = notePrefixMarkup;

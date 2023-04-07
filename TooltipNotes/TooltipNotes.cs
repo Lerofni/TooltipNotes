@@ -3,6 +3,7 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
+using System.Text.RegularExpressions;
 using Dalamud.Interface.Windowing;
 using NotesPlugin.Windows;
 using XivCommon;
@@ -13,7 +14,6 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using Dalamud.Game.ClientState;
 using Dalamud.Data;
-
 using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
@@ -40,9 +40,10 @@ namespace NotesPlugin
         private readonly AllNotesWindow allNotesWindow;
 
         private CommandManager CommandManager { get; init; }
+        
         public readonly Config Config;
         private string lastNoteKey = "";
-        public string oldpluginConfig = "";
+        public string oldpluginConfig;
         public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
 
         [PluginService]
@@ -54,20 +55,9 @@ namespace NotesPlugin
         public static DataManager? DataManager { get; private set; }
 
         private ulong characterId => ClientState?.LocalContentId ?? 0;
-        private uint? CurrentClassJobId
-        {
-            get
-            {
-                if (ClientState!.IsLoggedIn && ClientState.LocalPlayer != null)
-                {
-                    return ClientState.LocalPlayer?.ClassJob.Id ?? null;
-                }
+        
 
-                return null;
-            }
-        }
-        
-        
+
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
@@ -99,10 +89,10 @@ namespace NotesPlugin
             {
                 HelpMessage = "This opens the TooltipNotes Config"
             });
-            // CommandManager.AddHandler(openallNote, new CommandInfo(OnopenallNote)
-            // {
-            //     HelpMessage = "This opens a Window with all your notes displayed"
-            // });
+            CommandManager.AddHandler(openallNote, new CommandInfo(OnopenallNote)
+            {
+                HelpMessage = "This opens a Window with all your notes displayed"
+            });
             CommandManager.AddHandler(newNote, new CommandInfo(OnopennewNote)
             {
                 HelpMessage = "This lets you open a note window based on the last hovered item "
@@ -144,6 +134,7 @@ namespace NotesPlugin
             inventoryContextMenuItem2 = new InventoryContextMenuItem(
                 new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
+         
         }
 
         
@@ -198,26 +189,26 @@ namespace NotesPlugin
             var name = new SeString(new TextPayload($"{(hasLabel ? "Unlabel" : "Label")}: {label}"));
             return new InventoryContextMenuItem(name, args =>
             {
-                Config.Note note;
+                Config.Note note1;
                 if (!Config.ContainsKey(lastNoteKey))
                 {
-                    note = new();
-                    Config[lastNoteKey] = note;
+                    note1 = new();
+                    Config[lastNoteKey] = note1;
                 }
                 else
                 {
-                    note = Config[lastNoteKey];
+                    note1 = Config[lastNoteKey];
                 }
 
                 if (hasLabel)
                 {
-                    note.Labels.Remove(label);
-                    if (note.Labels.Count == 0 && note.Text.Length == 0)
+                    note1.Labels.Remove(label);
+                    if (note1.Labels.Count == 0 && note1.Text.Length == 0)
                         Config.Remove(lastNoteKey);
                 }
                 else
                 {
-                    note.Labels.Add(label);
+                    note1.Labels.Add(label);
                 }
                 Config.Save();
             }, true);
@@ -243,7 +234,7 @@ namespace NotesPlugin
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {
             var EnableDebug = Config.EnableDebug;
-            var glamourName = itemTooltip[ItemTooltipString.GlamourName].TextValue;
+            var glamourName = itemTooltip[ItemTooltipString.GlamourName];
 
             ItemTooltipString tooltipField;
             var appendNote = true;
@@ -251,7 +242,11 @@ namespace NotesPlugin
             {
                 appendNote = false;
                 tooltipField = ItemTooltipString.Description;
-                glamourName = "";
+                if (!itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
+                {
+                    glamourName = "";
+                }
+                
             }
             else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
             {
@@ -267,8 +262,10 @@ namespace NotesPlugin
                 return;
             }
 
+            
+
             lastNoteKey = itemid.ToString();
-            if (Config.GlamourSpecific && glamourName.Length > 0)
+            if (Config.GlamourSpecific && glamourName.TextValue.Length > 0)
             {
                 lastNoteKey = $"{glamourName}" + lastNoteKey;
             }
@@ -277,6 +274,7 @@ namespace NotesPlugin
                 lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
             }
 
+           
             if (EnableDebug)
             {
                 PluginLog.Debug($"NoteId: {lastNoteKey}");
@@ -388,13 +386,16 @@ namespace NotesPlugin
                     {
                         
                         hidePrevious = true;
-                        continue;
+                        
                     }
                     else
                     {
                         AppendMarkup(labelMarkup, label, Config.LabelMarkup);
-                        if(EnableDebug)
-                        PluginLog.Debug($"Label: {label}");
+                        if (EnableDebug)
+                        {
+                            PluginLog.Debug($"Label: {label}");  
+                        }
+                            
                     }
                     
                 }

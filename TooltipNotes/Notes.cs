@@ -58,9 +58,10 @@ namespace NotesPlugin
             public Markup Markup = new();
             public List<string> Labels = new();
         }
-
         public bool CharacterSpecific = true;
+        public int CharacterNote = 0;
         public bool GlamourSpecific = true;
+        public int GlamourNote = 0;
         public bool EnableStyles = false;
         public bool NotePrefix = true;
         public bool EnableDebug = false;
