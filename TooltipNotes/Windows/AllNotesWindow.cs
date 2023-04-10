@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -109,7 +110,14 @@ public class AllNotesWindow : Window, IDisposable
                 }
                 ImGui.InputText($"##{input}", ref itemName,10000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.ReadOnly);
                 ImGui.SameLine();
-                ImGui.InputText($"##{input+itemId}", ref notepair.Value.Text, 100000,  ImGuiInputTextFlags.EnterReturnsTrue| ImGuiInputTextFlags.None);
+                if (Regex.IsMatch(notepair.Value.Text, @"\n"))
+                {
+                    ImGui.InputTextMultiline($"##{input + itemId}", ref notepair.Value.Text, 1000, new Vector2(272, 75),
+                                             ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.None |
+                                             ImGuiInputTextFlags.CtrlEnterForNewLine);
+                }
+                else 
+                    ImGui.InputText($"##{input+itemId}", ref notepair.Value.Text, 100000,  ImGuiInputTextFlags.EnterReturnsTrue| ImGuiInputTextFlags.None);
                 if (config.EnableStyles)
                 {
                     ImGui.SameLine();

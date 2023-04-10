@@ -215,7 +215,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Checkbox("Character-specific notes", ref characterSpecific);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
-            ImGui.SetTooltip("Changing this will hide your existing notes!");
+            ImGui.SetTooltip("Changing this will hide some of your existing notes!");
         }
         ImGui.SameLine();
         ImGui.RadioButton("##config", ref characterNote, 0);

@@ -280,7 +280,7 @@ namespace NotesPlugin
                 PluginLog.Debug($"NoteId: {lastNoteKey}");
             }
             
-            if (Config.TryGetValue(lastNoteKey, out var note))
+            if (Config.TryGetValue(lastNoteKey, out var note) || Config.TryGetValue(itemid.ToString(), out note))
             {
                 var originalData = itemTooltip[tooltipField];
                 var description = new SeStringBuilder();

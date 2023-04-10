@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
+using System.Numerics;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Dalamud.Logging;
@@ -54,7 +54,7 @@ public class NoteWindow : Window, IDisposable
         }
 
         ImGui.PushItemWidth(350);
-        var enterPressed = ImGui.InputText("", ref note.Text, 1000, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll);
+        var enterPressed = ImGui.InputTextMultiline("", ref note.Text, 1000, new Vector2(350,125),ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CtrlEnterForNewLine);
         if (config.EnableStyles)
         {
             ImGui.SameLine();
