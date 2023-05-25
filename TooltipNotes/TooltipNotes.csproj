@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>1.1.1.0</Version>
+        <Version>1.1.2.0</Version>
         <Description>A Plugin to add notes to Tooltips</Description>
         <PackageProjectUrl>https://github.com/Lerofni/TooltipNotes.git</PackageProjectUrl>
         <Configurations>Debug;Release</Configurations>
@@ -26,14 +26,14 @@
         <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     </PropertyGroup>
 
-    <!--   <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">-->
-    <!--    <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>-->
-    <!--  </PropertyGroup>-->
+       <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+        <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>
+      </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.11"/>
-        <PackageReference Include="Dalamud.ContextMenu" Version="1.2.2"/>
-        <PackageReference Include="XivCommon" Version="7.0.0-alpha.1"/>
+        <PackageReference Include="DalamudPackager" Version="2.1.11" />
+        <PackageReference Include="Dalamud.ContextMenu" Version="1.2.3" />
+        <PackageReference Include="XivCommon" Version="7.0.1" />
         <Reference Include="FFXIVClientStructs">
             <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
             <Private>false</Private>
@@ -64,6 +64,6 @@
         </Reference>
     </ItemGroup>
     <Target Name="PackagePlugin" AfterTargets="Build">
-        <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(OutputPath)" AssemblyName="$(AssemblyName)"/>
+        <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(OutputPath)" AssemblyName="$(AssemblyName)" />
     </Target>
 </Project>
