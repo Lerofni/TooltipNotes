@@ -7,12 +7,15 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System.Text.Json;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 
 namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
+    public static IPluginLog? PluginLog { get; private set; }
+    
     private readonly Config config;
 
     // Config state

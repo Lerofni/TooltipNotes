@@ -14,6 +14,8 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using Dalamud.Game.ClientState;
 using Dalamud.Data;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 
 namespace NotesPlugin
@@ -25,45 +27,53 @@ namespace NotesPlugin
         private const string openallNote = "/tnallnotes";
         private const string newNote = "/tnnote";
 
-        private readonly XivCommonBase XivCommon;
+    
 
         private readonly InventoryContextMenuItem inventoryContextMenuItem;
         private readonly InventoryContextMenuItem inventoryContextMenuItem2;
 
         private readonly DalamudContextMenu contextMenuBase;
-        private readonly DalamudPluginInterface pluginInterface;
-
+        
         private WindowSystem windowSystem;
 
         private readonly NoteWindow noteWindow;
         private readonly ConfigWindow configWindow;
         private readonly AllNotesWindow allNotesWindow;
-
-        private CommandManager CommandManager { get; init; }
+        
+        [PluginService]
+        public static ICommandManager CommandManager { get; private set; }
         
         public readonly Config Config;
         private string lastNoteKey = "";
         public string oldpluginConfig;
         public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
+        
+
+        
+        [PluginService]
+        public static DalamudPluginInterface PluginInterface { get; private set; }
+        
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static IClientState? ClientState { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        public static ClientState? ClientState { get; private set; }
-
-        [PluginService]
-        [RequiredVersion("1.0")]
-        public static DataManager? DataManager { get; private set; }
+        public static IDataManager? DataManager { get; private set; }
 
         private ulong characterId => ClientState?.LocalContentId ?? 0;
         
+        [PluginService]
+        public static IPluginLog? PluginLog { get; private set; }
+        
+        [PluginService]
+        public static IGameInteropProvider GameInteropProvider { get; private set; }
+
+        private Hook hook;
 
 
-        public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+        public Plugin()
         {
-            this.pluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
 
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
@@ -101,7 +111,7 @@ namespace NotesPlugin
             Config = new Config();
             try
             {
-                var pluginConfig = pluginInterface.GetPluginConfig();
+                var pluginConfig = PluginInterface.GetPluginConfig();
                 if (pluginConfig is Config d)
                     Config = d;
                 PluginLog.Debug("Configuration loaded successfully!");
@@ -111,8 +121,8 @@ namespace NotesPlugin
                 PluginLog.Error("Configuration could not be loaded");
             }
             
-            Config.PluginInterface = this.pluginInterface;
-            oldpluginConfig = Path.Combine(pluginInterface.GetPluginConfigDirectory(), "Notes.json");
+            Config.PluginInterface = PluginInterface;
+            oldpluginConfig = Path.Combine(PluginInterface.GetPluginConfigDirectory(), "Notes.json");
 
             windowSystem = new(Name);
 
@@ -123,18 +133,18 @@ namespace NotesPlugin
             allNotesWindow = new AllNotesWindow(Config);
             windowSystem.AddWindow(allNotesWindow);
 
-            this.pluginInterface.UiBuilder.Draw += windowSystem.Draw;
-            pluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
+            PluginInterface.UiBuilder.Draw += windowSystem.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
 
-            XivCommon = new XivCommonBase(Hooks.Tooltips);
-            XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
-            contextMenuBase = new DalamudContextMenu();
+         
+            contextMenuBase = new DalamudContextMenu(PluginInterface);
             inventoryContextMenuItem = new InventoryContextMenuItem(
                 new SeString(new TextPayload("Add Note")), AddNote, true);
             inventoryContextMenuItem2 = new InventoryContextMenuItem(
                 new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-         
+            hook = new Hook();
+
         }
 
         
@@ -146,8 +156,7 @@ namespace NotesPlugin
             allNotesWindow.Dispose();
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             contextMenuBase.Dispose();
-            XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
-            XivCommon.Dispose();
+            hook.Dispose();
             CommandManager.RemoveHandler(openconfig);
             CommandManager.RemoveHandler(openallNote);
             CommandManager.RemoveHandler(newNote);
@@ -230,6 +239,8 @@ namespace NotesPlugin
                 }
             }
         }
+        
+      
 
         public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
         {

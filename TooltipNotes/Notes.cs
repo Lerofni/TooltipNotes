@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Plugin;
 using Dalamud.Configuration;
+using Dalamud.Plugin.Services;
 
 
 namespace NotesPlugin
@@ -15,6 +16,8 @@ namespace NotesPlugin
 
         [NonSerialized]
         public DalamudPluginInterface? PluginInterface;
+        
+        public static IPluginLog? PluginLog { get; private set; }
 
         public class Markup
         {
