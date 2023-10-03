@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Dalamud.Game.Text.SeStringHandling;
@@ -9,23 +10,35 @@ using Dalamud.Memory;
 using Dalamud.Memory.Exceptions;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace NotesPlugin;
 
-public class Hook : IDisposable
+public  class Hook : IDisposable
 {
-    [PluginService]
-    public static IPluginLog? PluginLog { get; private set; }
     
-    [PluginService]
-    public static IGameGui GameGui { get; private set; }
     public virtual unsafe void OnGenerateItemTooltip(NumberArrayData* numberArrayData,
                                                      StringArrayData* stringArrayData)
     {
     }
-    [PluginService]
-    private static IGameInteropProvider GameInteropProvider { get;  set; }
+
+    private List<Hook> Hooklist = new();
+
+    public void addList(Hook hook)
+    {
+        Hooklist.Add(hook);
+    }
+    protected static unsafe SeString?
+        GetTooltipString(StringArrayData* stringArrayData, ItemTooltipField field) =>
+        GetTooltipString(stringArrayData, (int)field);
+    
+    
+    protected static unsafe TooltipFlags GetTooltipVisibility(int** numberArrayData)
+    {
+        return (TooltipFlags)(*(*(numberArrayData + 4) + 4));
+    }
+   
      protected static unsafe SeString? GetTooltipString(StringArrayData* stringArrayData, int field) {
             try {
                 if (stringArrayData->AtkArrayData.Size <= field) 
@@ -34,11 +47,13 @@ public class Hook : IDisposable
                 var stringAddress = new IntPtr(stringArrayData->StringArray[field]);
                 return stringAddress == IntPtr.Zero ? null : MemoryHelper.ReadSeStringNullTerminated(stringAddress);
             } catch (Exception ex) {
-                PluginLog.Error(ex.Message);
+                Plugin.PluginLog?.Error(ex.Message);
                 return new SeString();
             }
      }
-
+        protected static unsafe void 
+            SetTooltipString(StringArrayData* stringArrayData, ItemTooltipField field, SeString seString) =>
+            SetTooltipString(stringArrayData, (int)field, seString);
      protected static unsafe void SetTooltipString(StringArrayData* stringArrayData, int field, SeString seString) {
          seString ??= new SeString();
          var bytes = seString.Encode().ToList();
@@ -52,15 +67,22 @@ public class Hook : IDisposable
 
      public Hook()
      {
-         
-         GameInteropProvider?.InitializeFromAttributes(this);
+         Plugin.PluginLog?.Debug("Test");
+         Plugin.GameInteropProvider?.InitializeFromAttributes(this);
+         Plugin.GameGui!.HoveredItemChanged += GuiOnHoveredItemChanged;
          generateItemTooltipHook?.Enable();
+         if (generateItemTooltipHook == null)
+         {
+             Plugin.PluginLog?.Debug("Fail");
+         }
      }
 
-   
+     protected static InventoryItem Item => HoveredItem;
+     public static InventoryItem HoveredItem { get; private set; }
 
      public void Dispose()
      {
+         Plugin.GameGui!.HoveredItemChanged -= GuiOnHoveredItemChanged;
          generateItemTooltipHook?.Dispose();
      }
 
@@ -68,15 +90,68 @@ public class Hook : IDisposable
 
      public unsafe void* GenerateItemTooltipDetour(AtkUnitBase* addonItemDetail, NumberArrayData* numberArrayData, StringArrayData* stringArrayData)
      {
-         try
+         if (!blockItemTooltip)
          {
-             OnGenerateItemTooltip(numberArrayData, stringArrayData);
+             try
+             {
+                 foreach (var hook in Hooklist)
+                 {
+                     Plugin.PluginLog?.Debug("Entering detour");
+                     hook.OnGenerateItemTooltip(numberArrayData, stringArrayData);
+                 }
+             }
+             catch (Exception ex)
+             {
+                 Plugin.PluginLog?.Error(ex.Message);
+             } finally
+             {
+                 generateItemTooltipHook!.Original(addonItemDetail, numberArrayData, stringArrayData);
+             }
          }
-         catch (Exception ex)
+         else
          {
-             PluginLog.Error(ex.Message);
+             blockItemTooltip = false;
          }
-                 
+
          return generateItemTooltipHook!.Original(addonItemDetail, numberArrayData, stringArrayData);
      }
+     private ulong lastItem;
+     private bool blockItemTooltip;
+     private void GuiOnHoveredItemChanged(object? sender, ulong e)
+     {
+         if (lastItem == 0 && e != 0)
+         {
+             blockItemTooltip = true;
+             lastItem = e;
+         }
+         else if (lastItem != 0 && e == 0)
+         {
+             blockItemTooltip = true;
+             lastItem = e;
+         }
+         else
+         {
+             blockItemTooltip = false;
+             lastItem = e;
+         }
+     }
+     public enum ItemTooltipField : byte {
+                 ItemName,
+                 GlamourName,
+                 ItemUiCategory,
+                 ItemDescription = 13,
+                 Effects = 16,
+                 Levels = 23,
+                 DurabilityPercent = 28,
+                 SpiritbondPercent = 30,
+                 ExtractableProjectableDesynthesizable = 35,
+                 Param0 = 37,
+                 Param1 = 38,
+                 Param2 = 39,
+                 Param3 = 40,
+                 Param4 = 41,
+                 Param5 = 42,
+                 ShopSellingPrice = 63,
+                 ControlsDisplay = 64,
+             }
 }

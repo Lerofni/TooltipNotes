@@ -14,7 +14,7 @@ namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-    public static IPluginLog? PluginLog { get; private set; }
+   
     
     private readonly Config config;
 
@@ -184,7 +184,7 @@ public class ConfigWindow : Window, IDisposable
         var oldNotesDict = JsonSerializer.Deserialize<Dictionary<string, string>>(oldjson);
         if (oldNotesDict == null)
         {
-            PluginLog.Error($"Failed to deserialize: {oldpluginconfig}");
+            Plugin.PluginLog?.Error($"Failed to deserialize: {oldpluginconfig}");
             return;
         }
 
