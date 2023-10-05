@@ -21,9 +21,9 @@ public class TooltipLogic : Hook
         var itemid = Plugin.GameGui!.HoveredItem;
         var EnableDebug = config.EnableDebug;
         var GlamourName = GetTooltipString(stringArrayData, ItemTooltipField.GlamourName);
-        ItemTooltipField field = ItemTooltipField.ItemName;
+        ItemTooltipField field;
         var appendNote = true;
-        Plugin.PluginLog.Debug("Test");
+        
         var tooltipVisibility = GetTooltipVisibility((int**)numberArrayData);
         if (tooltipVisibility.HasFlag(TooltipFlags.Description))
         {

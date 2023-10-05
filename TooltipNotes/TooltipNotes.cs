@@ -7,8 +7,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Dalamud.Interface.Windowing;
 using NotesPlugin.Windows;
-using XivCommon;
-using XivCommon.Functions.Tooltips;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
