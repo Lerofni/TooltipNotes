@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
@@ -45,7 +46,7 @@ namespace NotesPlugin
         public static ICommandManager? CommandManager { get; private set; }
         
         public readonly Config Config;
-        public string lastNoteKey = "";
+        public static string lastNoteKey = "";
         public string oldpluginConfig;
         public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
         
@@ -149,7 +150,7 @@ namespace NotesPlugin
                 new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             hook = new Hook();
-            tooltipLogic = new TooltipLogic(Config,lastNoteKey,characterId);
+            tooltipLogic = new TooltipLogic(Config,characterId);
             hook.addList(tooltipLogic);
         }
         
@@ -192,6 +193,7 @@ namespace NotesPlugin
         {
             noteWindow.Edit(lastNoteKey);
         }
+        
 
 
         private InventoryContextMenuItem createLabelContextMenuItem(string label)
@@ -245,188 +247,5 @@ namespace NotesPlugin
                 }
             }
         }
-        
-      
-
-        // public void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemid)
-        // {
-        //     var EnableDebug = Config.EnableDebug;
-        //     var glamourName = itemTooltip[ItemTooltipString.GlamourName];
-        //
-        //     ItemTooltipString tooltipField;
-        //     var appendNote = true;
-        //     if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Description))
-        //     {
-        //         appendNote = false;
-        //         tooltipField = ItemTooltipString.Description;
-        //         if (!itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
-        //         {
-        //             glamourName = "";
-        //         }
-        //         
-        //     }
-        //     else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Levels))
-        //     {
-        //         tooltipField = ItemTooltipString.EquipLevel;
-        //     }
-        //     else if (itemTooltip.Fields.HasFlag(ItemTooltipFields.Effects))
-        //     {
-        //         tooltipField = ItemTooltipString.Effects;
-        //         glamourName = "";
-        //     }
-        //     else
-        //     {
-        //         return;
-        //     }
-        //
-        //     
-        //
-        //     lastNoteKey = itemid.ToString();
-        //     if (Config.GlamourSpecific && glamourName.TextValue.Length > 0)
-        //     {
-        //         lastNoteKey = $"{glamourName}" + lastNoteKey;
-        //     }
-        //     if (Config.CharacterSpecific)
-        //     {
-        //         lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
-        //     }
-        //
-        //    
-        //     if (EnableDebug)
-        //     {
-        //         PluginLog?.Debug($"NoteId: {lastNoteKey}");
-        //     }
-        //     
-        //     if (Config.TryGetValue(lastNoteKey, out var note) || Config.TryGetValue(itemid.ToString(), out note))
-        //     {
-        //         var originalData = itemTooltip[tooltipField];
-        //         var description = new SeStringBuilder();
-        //
-        //         // If we append the note to the end of the field, add the original data first
-        //         
-        //         if (appendNote)
-        //         {
-        //             description.Append(originalData);
-        //             description.Append("\n\n");
-        //         }
-        //
-        //         // Thanks to NotNite from the Discord for the help!
-        //         // Color table: https://i.imgur.com/cZceCI3.png
-        //         // Data (the 'key' is the 'colorKey' parameter)
-        //         // https://github.com/xivapi/ffxiv-datamining/blob/master/csv/UIColor.csv
-        //         // Using AddUiForegroundOff doesn't work because the whole cell is colored
-        //
-        //         void AppendMarkup(Config.Markup markup, string text, Config.Markup fallbackMarkup)
-        //         {
-        //             if (markup.ColorKey == 0 && markup.GlowColorKey == 0)
-        //                 markup = fallbackMarkup;
-        //
-        //             var foregroundColor = markup.ColorKey;
-        //             var foregroundAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == foregroundColor)?.A ?? 0;
-        //             if (foregroundAlpha == 0)
-        //             {
-        //                 foregroundColor = fallbackMarkup.ColorKey;
-        //             }
-        //             description.AddUiForeground(foregroundColor);
-        //
-        //             var glowColor = markup.GlowColorKey;
-        //             var glowAlpha = ConfigWindow.ForegroundColors.Find(c => c.Index == glowColor)?.A ?? 0;
-        //             description.AddUiGlow(glowColor);
-        //
-        //             description.Append(text);
-        //
-        //             description.AddUiGlowOff();
-        //
-        //             description.AddUiForegroundOff();
-        //         }
-        //
-        //         if (note.Text.Length > 0)
-        //         {
-        //             if (Config.NotePrefix)
-        //             {
-        //                 AppendMarkup(Config.NotePrefixMarkup, "Note: ", Config.Markup.DefaultNotePrefix);
-        //             }
-        //             var noteMarkup = Config.EnableStyles ? note.Markup : new();
-        //             AppendMarkup(noteMarkup, note.Text, Config.NoteMarkup);
-        //             if (EnableDebug)
-        //             {
-        //                 PluginLog.Debug($"Note should be: {note.Text}");
-        //             }
-        //             
-        //         }
-        //         var hidePrevious = false;
-        //         var labelSet = false;
-        //         for (var i = 0; i < note.Labels.Count; i++)
-        //         {
-        //             var label = note.Labels[i];
-        //             var labelConf = Config.Labels[label];
-        //             var labelHide = labelConf.HideLabel;
-        //             var labelMarkup = new Config.Markup();
-        //             
-        //             
-        //             if (Config.EnableStyles && Config.Labels.TryGetValue(label, out var labelConfig))
-        //             {
-        //                 labelMarkup = labelConfig.Markup;
-        //             }
-        //             if (i == 0)
-        //             {
-        //                 if (note.Text.Length > 0)
-        //                 {
-        //                     description.Append("\n");
-        //                 }
-        //                 if (Config.LabelPrefix && !labelHide)
-        //                 {
-        //                     AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
-        //                     labelSet = true;
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 if (hidePrevious)
-        //                 {
-        //                     if (!labelSet)
-        //                     {
-        //                         AppendMarkup(Config.LabelPrefixMarkup, "Labels: ", Config.Markup.DefaultLabelPrefix);
-        //                         labelSet = true;
-        //                     }
-        //                     hidePrevious = false;
-        //                    
-        //                 }
-        //                 else
-        //                 {
-        //                     AppendMarkup(Config.LabelMarkup, ", ", Config.Markup.DefaultLabel);    
-        //                 }
-        //                 
-        //             }
-        //
-        //             if (labelHide)
-        //             {
-        //                 
-        //                 hidePrevious = true;
-        //                 
-        //             }
-        //             else
-        //             {
-        //                 AppendMarkup(labelMarkup, label, Config.LabelMarkup);
-        //                 if (EnableDebug)
-        //                 {
-        //                     PluginLog.Debug($"Label: {label}");  
-        //                 }
-        //                     
-        //             }
-        //             
-        //         }
-        //
-        //         // If we prepend the note, add some newlines before the original data
-        //         if (!appendNote)
-        //         {
-        //             description.Append("\n\n");
-        //             description.Append(originalData);
-        //         }
-        //
-        //         // Modify the tooltip
-        //         itemTooltip[tooltipField] = description.Build();
-        //     }
-        // }
     }
 }

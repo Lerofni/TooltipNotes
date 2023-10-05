@@ -10,7 +10,6 @@ public class TooltipLogic : Hook
 {
     private ulong characterId;
     private Config config;
-    private String lastNoteKey;
 
 
     // Logic mirroring the old Logic in TooltipNotes.cs goes here
@@ -24,6 +23,7 @@ public class TooltipLogic : Hook
         var GlamourName = GetTooltipString(stringArrayData, ItemTooltipField.GlamourName);
         ItemTooltipField field = ItemTooltipField.ItemName;
         var appendNote = true;
+        Plugin.PluginLog.Debug("Test");
         var tooltipVisibility = GetTooltipVisibility((int**)numberArrayData);
         if (tooltipVisibility.HasFlag(TooltipFlags.Description))
         {
@@ -33,39 +33,40 @@ public class TooltipLogic : Hook
             {
                 GlamourName = "";
             }
-            else if (tooltipVisibility.HasFlag(TooltipFlags.Levels))
-            {
-                field = ItemTooltipField.Levels;
-            }
-            else if (tooltipVisibility.HasFlag(TooltipFlags.Effects))
-            {
-                field = ItemTooltipField.Effects;
-                GlamourName = "";
-            }
-            else
-            {
-                return;
-            }
         }
+        else if (tooltipVisibility.HasFlag(TooltipFlags.Levels))
+        {
+            field = ItemTooltipField.Levels;
+        }
+        else if (tooltipVisibility.HasFlag(TooltipFlags.Effects))
+        {
+            field = ItemTooltipField.Effects;
+            GlamourName = "";
+        }
+        else
+        {
+            return;
+        }
+        
 
-        lastNoteKey = itemid.ToString();
+        Plugin.lastNoteKey = itemid.ToString();
         if (GlamourName != null && config.GlamourSpecific && GlamourName.TextValue.Length > 0)
         {
-            lastNoteKey = $"{GlamourName}" + lastNoteKey;
+            Plugin.lastNoteKey = $"{GlamourName}" + Plugin.lastNoteKey;
         }
 
         if (config.CharacterSpecific)
         {
-            lastNoteKey = $"{characterId:X16}-" + lastNoteKey;
+            Plugin.lastNoteKey = $"{characterId:X16}-" + Plugin.lastNoteKey;
         }
 
 
         if (EnableDebug)
         {
-            Plugin.PluginLog?.Debug($"NoteId: {lastNoteKey}");
+            Plugin.PluginLog?.Debug($"NoteId: {Plugin.lastNoteKey}");
         }
 
-        if (config.TryGetValue(lastNoteKey, out var note) || config.TryGetValue(itemid.ToString(), out note))
+        if (config.TryGetValue(Plugin.lastNoteKey, out var note) || config.TryGetValue(itemid.ToString(), out note))
         {
             var originalData = GetTooltipString(stringArrayData,field);
             var description = new SeStringBuilder();
@@ -200,15 +201,16 @@ public class TooltipLogic : Hook
 
             // Modify the tooltip
             SetTooltipString(stringArrayData, field, description.Build());
+            
         }
     
 
 }
 
-    public TooltipLogic(Config config, String lastNoteKey, ulong characterId)
+    public TooltipLogic(Config config, ulong characterId)
     {
-        this.lastNoteKey = lastNoteKey;
         this.config = config;
         this.characterId = characterId;
     }
 }
+
