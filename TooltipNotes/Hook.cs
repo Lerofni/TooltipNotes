@@ -67,14 +67,9 @@ public  class Hook : IDisposable
 
      public Hook()
      {
-         Plugin.PluginLog?.Debug("Test");
          Plugin.GameInteropProvider?.InitializeFromAttributes(this);
          Plugin.GameGui!.HoveredItemChanged += GuiOnHoveredItemChanged;
          generateItemTooltipHook?.Enable();
-         if (generateItemTooltipHook == null)
-         {
-             Plugin.PluginLog?.Debug("Fail");
-         }
      }
 
      protected static InventoryItem Item => HoveredItem;
@@ -96,17 +91,13 @@ public  class Hook : IDisposable
              {
                  foreach (var hook in Hooklist)
                  {
-                     Plugin.PluginLog?.Debug("Entering detour");
                      hook.OnGenerateItemTooltip(numberArrayData, stringArrayData);
                  }
              }
              catch (Exception ex)
              {
                  Plugin.PluginLog?.Error(ex.Message);
-             } finally
-             {
-                 generateItemTooltipHook!.Original(addonItemDetail, numberArrayData, stringArrayData);
-             }
+             } 
          }
          else
          {
