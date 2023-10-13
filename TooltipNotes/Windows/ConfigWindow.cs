@@ -7,12 +7,15 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System.Text.Json;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 
 namespace NotesPlugin.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
+   
+    
     private readonly Config config;
 
     // Config state
@@ -181,7 +184,7 @@ public class ConfigWindow : Window, IDisposable
         var oldNotesDict = JsonSerializer.Deserialize<Dictionary<string, string>>(oldjson);
         if (oldNotesDict == null)
         {
-            PluginLog.Error($"Failed to deserialize: {oldpluginconfig}");
+            Plugin.PluginLog?.Error($"Failed to deserialize: {oldpluginconfig}");
             return;
         }
 

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Plugin;
 using Dalamud.Configuration;
+using Dalamud.Plugin.Services;
 
 
 namespace NotesPlugin
@@ -15,6 +16,7 @@ namespace NotesPlugin
 
         [NonSerialized]
         public DalamudPluginInterface? PluginInterface;
+        
 
         public class Markup
         {
@@ -94,11 +96,11 @@ namespace NotesPlugin
             try
             {
                 PluginInterface?.SavePluginConfig(this);
-                PluginLog.Debug("Configuration saved successfully!");
+                Plugin.PluginLog?.Debug("Configuration saved successfully!");
             }
             catch
             {
-                PluginLog.Error("Configuration could not be saved");
+                Plugin.PluginLog?.Error("Configuration could not be saved");
             }
         }
 
