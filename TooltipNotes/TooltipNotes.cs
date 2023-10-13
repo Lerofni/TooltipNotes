@@ -61,8 +61,8 @@ namespace NotesPlugin
         [RequiredVersion("1.0")]
         public static IDataManager? DataManager { get; private set; }
 
-        private ulong characterId => ClientState?.LocalContentId ?? 0;
         
+
         [PluginService]
         public static IPluginLog? PluginLog { get; private set; }
         
@@ -132,7 +132,7 @@ namespace NotesPlugin
 
             noteWindow = new NoteWindow(Config);
             windowSystem.AddWindow(noteWindow);
-            configWindow = new ConfigWindow(Name, Config, oldpluginConfig, characterId);
+            configWindow = new ConfigWindow(Name, Config, oldpluginConfig);
             windowSystem.AddWindow(configWindow);
             allNotesWindow = new AllNotesWindow(Config);
             windowSystem.AddWindow(allNotesWindow);
@@ -148,7 +148,7 @@ namespace NotesPlugin
                 new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             hook = new Hook();
-            tooltipLogic = new TooltipLogic(Config,characterId);
+            tooltipLogic = new TooltipLogic(Config);
             hook.addList(tooltipLogic);
         }
         

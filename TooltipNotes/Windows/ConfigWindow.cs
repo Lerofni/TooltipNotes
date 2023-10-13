@@ -1,14 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Collections.Generic;
+using System.Text.Json;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using System.Text.Json;
-using Dalamud.Logging;
-using Dalamud.Plugin.Services;
-
 
 namespace NotesPlugin.Windows;
 
@@ -36,15 +33,14 @@ public class ConfigWindow : Window, IDisposable
     // Internal helper state
     private int focusLabelIndex = -1;
     private string errorMessage = "";
-    private string oldpluginconfig = "";
-    private ulong characterId = 0;
+    private string oldpluginconfig;
+    private ulong characterId ;
 
-    public ConfigWindow(string pluginName, Config config, string oldpluginconfig, ulong characterId) : base(
+    public ConfigWindow(string pluginName, Config config, string oldpluginconfig) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.config = config;
         this.oldpluginconfig = oldpluginconfig;
-        this.characterId = characterId;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -66,7 +62,7 @@ public class ConfigWindow : Window, IDisposable
         enableDebug = config.EnableDebug;
         characterNote = config.CharacterNote;
         glamourNote = config.GlamourNote;
-
+        if (Plugin.ClientState!.IsLoggedIn) characterId = Plugin.ClientState.LocalContentId;
         try
         {
             labels = Config.DeepClone(config.Labels.Values.Where(l => l.Name.Length > 0).ToList());
@@ -83,10 +79,10 @@ public class ConfigWindow : Window, IDisposable
     public class ColorInfo
     {
         public ushort Index = ushort.MaxValue;
-        public byte R = 0;
-        public byte G = 0;
-        public byte B = 0;
-        public byte A = 0;
+        public byte R;
+        public byte G;
+        public byte B;
+        public byte A;
 
         public static ColorInfo FromUIColor(ushort index, uint foreground)
         {
@@ -145,8 +141,8 @@ public class ConfigWindow : Window, IDisposable
             ImGui.EndGroup();
         }
 
-        PalettePicker($"Color:", ForegroundColors, ref markup.ColorKey);
-        PalettePicker($"Glow:", GlowColors, ref markup.GlowColorKey);
+        PalettePicker("Color:", ForegroundColors, ref markup.ColorKey);
+        PalettePicker("Glow:", GlowColors, ref markup.GlowColorKey);
 
         var close = ImGui.Button("Close");
         ImGui.SameLine();
@@ -360,7 +356,8 @@ public class ConfigWindow : Window, IDisposable
                     labels.RemoveAt(i);
                     return;
                 }
-                else if (enterPressed)
+
+                if (enterPressed)
                 {
                     // Select the next label field
                     focusLabelIndex = i + 1;

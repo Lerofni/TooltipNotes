@@ -1,5 +1,3 @@
-using System;
-using System.Reflection.PortableExecutable;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using NotesPlugin.Windows;
@@ -8,7 +6,6 @@ namespace NotesPlugin;
 
 public class TooltipLogic : Hook
 {
-    private ulong characterId;
     private Config config;
 
 
@@ -57,7 +54,7 @@ public class TooltipLogic : Hook
 
         if (config.CharacterSpecific)
         {
-            Plugin.lastNoteKey = $"{characterId:X16}-" + Plugin.lastNoteKey;
+            Plugin.lastNoteKey = $"{Plugin.ClientState!.LocalContentId:X16}-" + Plugin.lastNoteKey;
         }
 
 
@@ -205,12 +202,11 @@ public class TooltipLogic : Hook
         }
     
 
-}
+    }
 
-    public TooltipLogic(Config config, ulong characterId)
+    public TooltipLogic(Config config)
     {
         this.config = config;
-        this.characterId = characterId;
     }
 }
 
