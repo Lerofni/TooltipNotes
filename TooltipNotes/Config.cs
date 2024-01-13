@@ -64,6 +64,7 @@ namespace NotesPlugin
         public int CharacterNote = 0;
         public bool GlamourSpecific = true;
         public int GlamourNote = 0;
+        public bool QualitySpecific = true;
         public bool EnableStyles = false;
         public bool NotePrefix = true;
         public bool EnableDebug = false;

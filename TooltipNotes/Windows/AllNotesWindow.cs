@@ -68,14 +68,13 @@ public class AllNotesWindow : Window, IDisposable
             labels = new List<LabelState>();
            
             
-                foreach (var label in config.Labels.Values)
+                foreach (var label in itemNote.Labels.Values)
                 {
                     var noteHasLabel = noteLabels.Contains(label.Name);
                     labels.Add(new LabelState(label.Name, noteHasLabel));
                 }
                 labeldic.Add(input,labels);
         }
-        
     }
 
 
@@ -131,7 +130,7 @@ public class AllNotesWindow : Window, IDisposable
                 {
                     foreach ( var label in labeldic[input])
                     {
-                        var labelConfig = config.Labels[label.Name];
+                        var labelConfig = itemNote.Labels[label.Name];
                         if (!labelConfig.HideLabel)
                         {
                             ImGui.SameLine();

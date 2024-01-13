@@ -19,6 +19,7 @@ public class ConfigWindow : Window, IDisposable
     // Config state
     private bool characterSpecific;
     private bool glamourSpecific;
+    private bool qualitySpecific;
     private bool enableStyles;
     private bool notePrefix;
     private bool enableDebug;
@@ -35,6 +36,7 @@ public class ConfigWindow : Window, IDisposable
     private int focusLabelIndex = -1;
     private string errorMessage = "";
     private ulong characterId ;
+    private string configDirectory = "";
     
 
     public ConfigWindow(string pluginName, Config config, ItemNote itemNote) : base(
@@ -220,7 +222,11 @@ public class ConfigWindow : Window, IDisposable
         {
             ImGui.SetTooltip("Sets the identifying label in the allNotes window to (GN)");
         }
-
+        ImGui.Checkbox("Quality-specific notes", ref qualitySpecific);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Changing this might hide some existing notes!");
+        }
         ImGui.Checkbox("Enable Debug logging", ref enableDebug);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
@@ -341,13 +347,7 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.PopItemWidth();
         }
-
         ImGui.Separator();
-        
-        ImGui.Separator();
-        
-        
-
         var saveandquitClicked = ImGui.Button("Save&Quit##Config");
         ImGui.SameLine();
         var saveclicked = ImGui.Button("Save##Config");
@@ -369,6 +369,7 @@ public class ConfigWindow : Window, IDisposable
                 itemNote.Labels = labelsDict;
                 config.CharacterSpecific = characterSpecific;
                 config.GlamourSpecific = glamourSpecific;
+                config.QualitySpecific = qualitySpecific;
                 config.EnableStyles = enableStyles;
                 config.NotePrefix = notePrefix;
                 config.EnableDebug = enableDebug;

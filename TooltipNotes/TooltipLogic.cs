@@ -45,8 +45,12 @@ public class TooltipLogic : Hook
         {
             return;
         }
-        
 
+        if (!config.QualitySpecific && itemid >= 1000000)
+        {
+            itemid -= 1000000;
+            Plugin.PluginLog?.Debug($"Itemid: {itemid}");
+        }
         Plugin.lastNoteKey = itemid.ToString();
         if (GlamourName != null && config.GlamourSpecific && GlamourName.TextValue.Length > 0)
         {

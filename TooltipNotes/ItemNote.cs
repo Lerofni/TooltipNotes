@@ -25,7 +25,7 @@ public class ItemNote
         public List<string> Labels = new();
     }
     public Dictionary<string, Label> Labels = new();
-    public readonly Dictionary<string, Note> Notes = new();
+    public Dictionary<string, Note> Notes = new();
     
     
     public static T DeepClone<T>(T object2Copy)
@@ -106,7 +106,7 @@ public class ItemNote
             var options = new JsonSerializerOptions
             {
                 IncludeFields = true,
-            };
+            }; 
             var json = System.IO.File.ReadAllText(path);
             if (json == null)
                 throw new NullReferenceException();
@@ -114,6 +114,7 @@ public class ItemNote
             if (obj == null)
                 throw new NullReferenceException();
             obj.ConfigDirectory = configDirectory;
+            Plugin.PluginLog.Debug("Configuration loaded successfully!");
             return obj;
         }
         
