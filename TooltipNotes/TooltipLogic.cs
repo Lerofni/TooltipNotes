@@ -7,6 +7,7 @@ namespace NotesPlugin;
 public class TooltipLogic : Hook
 {
     private Config config;
+    private ItemNote itemNote;
 
 
     // Logic mirroring the old Logic in TooltipNotes.cs goes here
@@ -63,7 +64,7 @@ public class TooltipLogic : Hook
             Plugin.PluginLog?.Debug($"NoteId: {Plugin.lastNoteKey}");
         }
 
-        if (config.TryGetValue(Plugin.lastNoteKey, out var note) || config.TryGetValue(itemid.ToString(), out note))
+        if (itemNote.TryGetValue(Plugin.lastNoteKey, out var note) || itemNote.TryGetValue(itemid.ToString(), out note))
         {
             var originalData = GetTooltipString(stringArrayData,field);
             var description = new SeStringBuilder();
@@ -128,12 +129,12 @@ public class TooltipLogic : Hook
             for (var i = 0; i < note.Labels.Count; i++)
             {
                 var label = note.Labels[i];
-                var labelConf = config.Labels[label];
+                var labelConf = itemNote.Labels[label];
                 var labelHide = labelConf.HideLabel;
                 var labelMarkup = new Config.Markup();
 
 
-                if (config.EnableStyles && config.Labels.TryGetValue(label, out var labelConfig))
+                if (config.EnableStyles && itemNote.Labels.TryGetValue(label, out var labelConfig))
                 {
                     labelMarkup = labelConfig.Markup;
                 }
@@ -204,9 +205,10 @@ public class TooltipLogic : Hook
 
     }
 
-    public TooltipLogic(Config config)
+    public TooltipLogic(Config config, ItemNote itemNote)
     {
         this.config = config;
+        this.itemNote = itemNote;
     }
 }
 

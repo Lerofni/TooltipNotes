@@ -11,6 +11,7 @@ namespace NotesPlugin.Windows;
 public class NoteWindow : Window, IDisposable
 {
     private readonly Config config;
+    private ItemNote itemNote;
 
     private class LabelState
     {
@@ -27,13 +28,14 @@ public class NoteWindow : Window, IDisposable
     // UI state
     private bool focusNoteField = false;
     private string noteKey = "";
-    private Config.Note note = new();
+    private ItemNote.Note note = new();
     private List<LabelState> labels = new();
     
 
-    public NoteWindow(Config config) : base(
+    public NoteWindow(Config config,ItemNote itemNote) : base(
         "Item Note", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
+        this.itemNote = itemNote;
         this.config = config;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
@@ -65,13 +67,13 @@ public class NoteWindow : Window, IDisposable
         {
             foreach (var label in labels)
             {
-                Config.Label labelConfig;
-                labelConfig = config.Labels[label.Name];
+                ItemNote.Label labelConfig;
+                labelConfig = itemNote.Labels[label.Name];
                 if (!labelConfig.HideLabel)
                 {
                     ImGui.Checkbox(label.Name, ref label.Checked);    
                 }
-                
+               
             }
 
             
@@ -97,11 +99,11 @@ public class NoteWindow : Window, IDisposable
                             note.Labels.Add(label.Name);
                         }
                     }
-                    config[noteKey] = note;
+                    itemNote[noteKey] = note;
                 }
                 else
                 {
-                    config.Remove(noteKey);
+                    itemNote.Remove(noteKey);
                 }
                 IsOpen = false;
 
@@ -116,9 +118,9 @@ public class NoteWindow : Window, IDisposable
         focusNoteField = true;
 
         this.noteKey = noteKey;
-        if (config.ContainsKey(noteKey))
+        if (itemNote.ContainsKey(noteKey))
         {
-            note = Config.DeepClone(config[noteKey]);
+            note = ItemNote.DeepClone(itemNote[noteKey]);
         }
         else
         {
@@ -132,7 +134,7 @@ public class NoteWindow : Window, IDisposable
         }
 
         labels = new();
-        foreach (var label in config.Labels.Values)
+        foreach (var label in itemNote.Labels.Values)
         {
             var noteHasLabel = noteLabels.Contains(label.Name);
             labels.Add(new LabelState(label.Name, noteHasLabel));

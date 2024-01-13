@@ -17,12 +17,14 @@ using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
+using Item = Lumina.Excel.GeneratedSheets2.Item;
 
 namespace NotesPlugin
 {
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
+        public string configDirectory;
         private const string openconfig = "/tnconfig";
         private const string openallNote = "/tnallnotes";
         private const string newNote = "/tnnote";
@@ -44,9 +46,8 @@ namespace NotesPlugin
         public static ICommandManager? CommandManager { get; private set; }
         
         public readonly Config Config;
+        public ItemNote itemNote = new();
         public static string lastNoteKey = "";
-        public string oldpluginConfig;
-        public Dictionary<string, string> OldNotesDict = new Dictionary<string, string>();
         
 
         
@@ -124,17 +125,18 @@ namespace NotesPlugin
             {
                 PluginLog?.Error("Configuration could not be loaded");
             }
-            
+
+
             Config.PluginInterface = PluginInterface;
-            oldpluginConfig = Path.Combine(PluginInterface?.GetPluginConfigDirectory()!, "Notes.json");
-
+            
+            configDirectory = PluginInterface?.GetPluginConfigDirectory()!;
             windowSystem = new(Name);
-
-            noteWindow = new NoteWindow(Config);
+            itemNote = ItemNote.Load(configDirectory);
+            noteWindow = new NoteWindow(Config, itemNote);
             windowSystem.AddWindow(noteWindow);
-            configWindow = new ConfigWindow(Name, Config, oldpluginConfig);
+            configWindow = new ConfigWindow(Name, Config, itemNote);
             windowSystem.AddWindow(configWindow);
-            allNotesWindow = new AllNotesWindow(Config);
+            allNotesWindow = new AllNotesWindow(Config, itemNote);
             windowSystem.AddWindow(allNotesWindow);
 
             PluginInterface!.UiBuilder.Draw += windowSystem.Draw;
@@ -148,8 +150,12 @@ namespace NotesPlugin
                 new SeString(new TextPayload("Edit Note")), EditNote, true);
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             hook = new Hook();
-            tooltipLogic = new TooltipLogic(Config);
+            tooltipLogic = new TooltipLogic(Config, itemNote);
             hook.addList(tooltipLogic);
+            if (!File.Exists(configDirectory + "\\TooltipNotes.json.old"))
+            {
+                ConvertNotes();
+            }
         }
         
         public void Dispose()
@@ -197,46 +203,46 @@ namespace NotesPlugin
         private InventoryContextMenuItem createLabelContextMenuItem(string label)
         {
             var hasLabel = false;
-            if (Config.TryGetValue(lastNoteKey, out var note))
+            if (itemNote.TryGetValue(lastNoteKey, out var note))
             {
                 hasLabel = note.Labels.Contains(label);
             }
             var name = new SeString(new TextPayload($"{(hasLabel ? "Unlabel" : "Label")}: {label}"));
             return new InventoryContextMenuItem(name, args =>
             {
-                Config.Note note1;
-                if (!Config.ContainsKey(lastNoteKey))
+                ItemNote.Note note1;
+                if (!itemNote.ContainsKey(lastNoteKey))
                 {
                     note1 = new();
-                    Config[lastNoteKey] = note1;
+                    itemNote[lastNoteKey] = note1;
                 }
                 else
                 {
-                    note1 = Config[lastNoteKey];
+                    note1 = itemNote[lastNoteKey];
                 }
 
                 if (hasLabel)
                 {
                     note1.Labels.Remove(label);
                     if (note1.Labels.Count == 0 && note1.Text.Length == 0)
-                        Config.Remove(lastNoteKey);
+                        itemNote.Remove(lastNoteKey);
                 }
                 else
                 {
                     note1.Labels.Add(label);
                 }
-                Config.Save();
+                itemNote.Save();
             }, true);
         }
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            args.AddCustomItem(Config.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
+            args.AddCustomItem(itemNote.ContainsKey(lastNoteKey) ? inventoryContextMenuItem2 : inventoryContextMenuItem);
 
             // Updating labels while editing does not work
             if (!noteWindow.IsOpen)
             {
-                foreach (var label in Config.Labels.Values)
+                foreach (var label in itemNote.Labels.Values)
                 {
                     if (label.ShowInMenu && !label.HideLabel)
                     {
@@ -245,5 +251,34 @@ namespace NotesPlugin
                 }
             }
         }
+        // convert notes from Config to ItemNote
+        public void ConvertNotes()
+        {
+            File.Move(configDirectory + ".json", configDirectory + "\\TooltipNotes.json.old");
+            Config.Save();
+            foreach (var note in Config.Notes)
+                {
+                    var itemNoteNote = new ItemNote.Note();
+                    itemNoteNote.Text = note.Value.Text;
+                    itemNoteNote.Markup = note.Value.Markup;
+                    itemNoteNote.Labels = note.Value.Labels;
+                    itemNote.Notes[note.Key] = itemNoteNote;
+                    Config.Notes.Remove(note.Key);
+                }
+                foreach (var label in Config.Labels)
+                {
+                    var itemNoteLabel = new ItemNote.Label();
+                    itemNoteLabel.Name = label.Value.Name;
+                    itemNoteLabel.ShowInMenu = label.Value.ShowInMenu;
+                    itemNoteLabel.HideLabel = label.Value.HideLabel;
+                    itemNoteLabel.Markup = label.Value.Markup;
+                    itemNote.Labels[label.Key] = itemNoteLabel;
+                    Config.Labels.Remove(label.Key);
+                }
+                itemNote.Save();
+                Config.Save();
+                
+        }
+        
     }
 }
