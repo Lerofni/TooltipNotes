@@ -131,7 +131,8 @@ namespace NotesPlugin
             
             configDirectory = PluginInterface?.GetPluginConfigDirectory()!;
             windowSystem = new(Name);
-            itemNote = ItemNote.Load(configDirectory);
+            itemNote = new ItemNote();
+            itemNote.ConfigDirectory = configDirectory;
             noteWindow = new NoteWindow(Config, itemNote);
             windowSystem.AddWindow(noteWindow);
             configWindow = new ConfigWindow(Name, Config, itemNote);
@@ -155,6 +156,10 @@ namespace NotesPlugin
             if (!File.Exists(configDirectory + "\\TooltipNotes.json.old"))
             {
                 ConvertNotes();
+            }
+            else
+            {
+                itemNote = ItemNote.Load(configDirectory);
             }
         }
         

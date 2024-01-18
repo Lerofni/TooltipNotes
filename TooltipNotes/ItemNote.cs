@@ -90,11 +90,11 @@ public class ItemNote
             if (json == null)
                 throw new NullReferenceException();
             System.IO.File.WriteAllText(path, json);
-            Plugin.PluginLog?.Debug("Configuration saved successfully!");
+            Plugin.PluginLog?.Debug("Notes saved successfully!");
         }
         catch
         {
-            Plugin.PluginLog?.Error("Configuration could not be saved");
+            Plugin.PluginLog?.Error("Notes could not be saved");
         }
     }
     public static ItemNote Load(string configDirectory)
@@ -114,13 +114,13 @@ public class ItemNote
             if (obj == null)
                 throw new NullReferenceException();
             obj.ConfigDirectory = configDirectory;
-            Plugin.PluginLog.Debug("Configuration loaded successfully!");
+            Plugin.PluginLog.Debug("Notes loaded successfully!");
             return obj;
         }
         
         catch
         {
-            Plugin.PluginLog?.Error("Configuration could not be loaded");
+            Plugin.PluginLog?.Error("Notes could not be loaded");
             return new ItemNote();
         }
     }
