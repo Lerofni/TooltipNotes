@@ -24,7 +24,7 @@ namespace NotesPlugin
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "TooltipNotes";
-        public string configDirectory;
+        public string? configDirectory;
         private const string openconfig = "/tnconfig";
         private const string openallNote = "/tnallnotes";
         private const string newNote = "/tnnote";
@@ -46,7 +46,7 @@ namespace NotesPlugin
         public static ICommandManager? CommandManager { get; private set; }
         
         public readonly Config Config;
-        public ItemNote itemNote = new();
+        public ItemNote itemNote;
         public static string lastNoteKey = "";
         
 
@@ -79,7 +79,7 @@ namespace NotesPlugin
 
         public Plugin()
         {
-
+            configDirectory = PluginInterface?.GetPluginConfigDirectory()!;
             ConfigWindow.ForegroundColors.Clear();
             ConfigWindow.GlowColors.Clear();
 
@@ -112,7 +112,6 @@ namespace NotesPlugin
             {
                 HelpMessage = "This lets you open a note window based on the last hovered item "
             });
-            
             Config = new Config();
             try
             {
@@ -126,13 +125,21 @@ namespace NotesPlugin
                 PluginLog?.Error("Configuration could not be loaded");
             }
 
+            if (!File.Exists(configDirectory + "\\TooltipNotes.json.old"))
+            {
+                itemNote = new ItemNote();
+                itemNote.ConfigDirectory = configDirectory;
+                ConvertNotes();
+            }
+            else
+            {
+                itemNote = ItemNote.Load(configDirectory);
+            }
 
             Config.PluginInterface = PluginInterface;
-            
-            configDirectory = PluginInterface?.GetPluginConfigDirectory()!;
+
             windowSystem = new(Name);
-            itemNote = new ItemNote();
-            itemNote.ConfigDirectory = configDirectory;
+
             noteWindow = new NoteWindow(Config, itemNote);
             windowSystem.AddWindow(noteWindow);
             configWindow = new ConfigWindow(Name, Config, itemNote);
@@ -143,7 +150,7 @@ namespace NotesPlugin
             PluginInterface!.UiBuilder.Draw += windowSystem.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
 
-         
+
             contextMenuBase = new DalamudContextMenu(PluginInterface);
             inventoryContextMenuItem = new InventoryContextMenuItem(
                 new SeString(new TextPayload("Add Note")), AddNote, true);
@@ -153,14 +160,6 @@ namespace NotesPlugin
             hook = new Hook();
             tooltipLogic = new TooltipLogic(Config, itemNote);
             hook.addList(tooltipLogic);
-            if (!File.Exists(configDirectory + "\\TooltipNotes.json.old"))
-            {
-                ConvertNotes();
-            }
-            else
-            {
-                itemNote = ItemNote.Load(configDirectory);
-            }
         }
         
         public void Dispose()

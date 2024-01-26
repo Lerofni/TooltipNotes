@@ -36,7 +36,7 @@ public class ConfigWindow : Window, IDisposable
     private int focusLabelIndex = -1;
     private string errorMessage = "";
     private ulong characterId ;
-    private string configDirectory = "";
+    
     
 
     public ConfigWindow(string pluginName, Config config, ItemNote itemNote) : base(

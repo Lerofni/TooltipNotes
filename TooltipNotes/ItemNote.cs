@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NotesPlugin;
 
 public class ItemNote
 {
-    [NonSerialized]
-    public string ConfigDirectory;
-
+    [JsonIgnore]
+    public string? ConfigDirectory;
     public class Label
     {
         public string Name = "";
@@ -79,7 +79,7 @@ public class ItemNote
     public void Save()
     {
         string fileName = "ItemNotes.json";
-        string path = System.IO.Path.Combine(ConfigDirectory, fileName);
+        string path = System.IO.Path.Combine(ConfigDirectory!, fileName);
         try
         {
             var options = new JsonSerializerOptions
@@ -97,10 +97,10 @@ public class ItemNote
             Plugin.PluginLog?.Error("Notes could not be saved");
         }
     }
-    public static ItemNote Load(string configDirectory)
+    public static ItemNote Load(string? configDirectory)
     {
         string fileName = "ItemNotes.json";
-        string path = System.IO.Path.Combine(configDirectory, fileName);
+        string path = System.IO.Path.Combine(configDirectory!, fileName);
         try
         {
             var options = new JsonSerializerOptions
@@ -114,14 +114,14 @@ public class ItemNote
             if (obj == null)
                 throw new NullReferenceException();
             obj.ConfigDirectory = configDirectory;
-            Plugin.PluginLog.Debug("Notes loaded successfully!");
+            Plugin.PluginLog?.Debug("Notes loaded successfully!");
             return obj;
         }
-        
         catch
         {
             Plugin.PluginLog?.Error("Notes could not be loaded");
             return new ItemNote();
         }
     }
+    
 }
