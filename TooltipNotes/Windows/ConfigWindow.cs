@@ -14,10 +14,12 @@ public class ConfigWindow : Window, IDisposable
    
     
     private readonly Config config;
+    private ItemNote itemNote;
 
     // Config state
     private bool characterSpecific;
     private bool glamourSpecific;
+    private bool qualitySpecific;
     private bool enableStyles;
     private bool notePrefix;
     private bool enableDebug;
@@ -28,19 +30,20 @@ public class ConfigWindow : Window, IDisposable
     private bool labelPrefix;
     private Config.Markup labelPrefixMarkup = new();
     private Config.Markup labelMarkup = new();
-    private List<Config.Label> labels = new();
+    private List<ItemNote.Label> labels = new();
 
     // Internal helper state
     private int focusLabelIndex = -1;
     private string errorMessage = "";
-    private string oldpluginconfig;
     private ulong characterId ;
+    
+    
 
-    public ConfigWindow(string pluginName, Config config, string oldpluginconfig) : base(
+    public ConfigWindow(string pluginName, Config config, ItemNote itemNote) : base(
         $"{pluginName} Config", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.config = config;
-        this.oldpluginconfig = oldpluginconfig;
+        this.itemNote = itemNote;
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -65,12 +68,12 @@ public class ConfigWindow : Window, IDisposable
         if (Plugin.ClientState!.IsLoggedIn) characterId = Plugin.ClientState.LocalContentId;
         try
         {
-            labels = Config.DeepClone(config.Labels.Values.Where(l => l.Name.Length > 0).ToList());
+            labels = ItemNote.DeepClone(itemNote.Labels.Values.Where(l => l.Name.Length > 0).ToList());
         }
         catch (NullReferenceException)
         {
         }
-        labels.Add(new Config.Label());
+        labels.Add(new ItemNote.Label());
 
         focusLabelIndex = labels.Count - 1;
         errorMessage = "";
@@ -174,32 +177,6 @@ public class ConfigWindow : Window, IDisposable
         }
     }
 
-    public void NoteConverter()
-    {
-        string oldjson = File.ReadAllText(oldpluginconfig);
-        var oldNotesDict = JsonSerializer.Deserialize<Dictionary<string, string>>(oldjson);
-        if (oldNotesDict == null)
-        {
-            Plugin.PluginLog?.Error($"Failed to deserialize: {oldpluginconfig}");
-            return;
-        }
-
-        foreach (var i in oldNotesDict)
-        {
-            Config.Note note = new();
-            var key = "";
-            if (characterSpecific)
-            {
-                key = $"{characterId:X16}-";
-            }
-            key += i.Key;
-            note.Text = i.Value;
-            config[key] = note;
-        }
-
-        File.Move(oldpluginconfig, oldpluginconfig + ".old", true);
-    }
-    
     public override void Draw()
     {
    
@@ -245,7 +222,11 @@ public class ConfigWindow : Window, IDisposable
         {
             ImGui.SetTooltip("Sets the identifying label in the allNotes window to (GN)");
         }
-
+        ImGui.Checkbox("Quality-specific notes", ref qualitySpecific);
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.SetTooltip("Changing this might hide some existing notes!");
+        }
         ImGui.Checkbox("Enable Debug logging", ref enableDebug);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
@@ -346,7 +327,7 @@ public class ConfigWindow : Window, IDisposable
                 if (addClicked || enterPressed)
                 {
                     focusLabelIndex = labels.Count;
-                    labels.Add(new Config.Label());
+                    labels.Add(new ItemNote.Label());
                 }
             }
             else
@@ -366,18 +347,7 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.PopItemWidth();
         }
-
         ImGui.Separator();
-
-        if (File.Exists(oldpluginconfig) && ImGui.Button("Migrate Old Notes to new system"))
-        {
-            NoteConverter();
-        }
-
-        ImGui.Separator();
-        
-        
-
         var saveandquitClicked = ImGui.Button("Save&Quit##Config");
         ImGui.SameLine();
         var saveclicked = ImGui.Button("Save##Config");
@@ -389,16 +359,17 @@ public class ConfigWindow : Window, IDisposable
                 var nonEmptyLabels = labels.Where(l => l.Name.Length > 0);
 
                 // Make sure no duplicate labels are passed
-                var labelsDict = new Dictionary<string, Config.Label>();
+                var labelsDict = new Dictionary<string, ItemNote.Label>();
                 foreach (var label in nonEmptyLabels)
                 {
                     if (!labelsDict.TryAdd(label.Name, label))
                         throw new ArgumentException($"Label '{label.Name}' is not unique!");
                 }
 
-                config.Labels = labelsDict;
+                itemNote.Labels = labelsDict;
                 config.CharacterSpecific = characterSpecific;
                 config.GlamourSpecific = glamourSpecific;
+                config.QualitySpecific = qualitySpecific;
                 config.EnableStyles = enableStyles;
                 config.NotePrefix = notePrefix;
                 config.EnableDebug = enableDebug;
@@ -426,6 +397,7 @@ public class ConfigWindow : Window, IDisposable
                     config.LabelMarkup = Config.Markup.DefaultLabel;
                 }
                 config.Save();
+                itemNote.Save();
                 if (saveandquitClicked)
                 {
                     IsOpen = false;
@@ -443,4 +415,6 @@ public class ConfigWindow : Window, IDisposable
             ImGui.TextColored(new Vector4(255, 0, 0, 255), errorMessage);
         }
     }
+
+    
 }

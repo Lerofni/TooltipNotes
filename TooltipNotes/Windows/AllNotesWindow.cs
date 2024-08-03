@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Interface.Windowing;
+using Dalamud.Logging;
 using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
@@ -13,6 +14,7 @@ namespace NotesPlugin.Windows;
 public class AllNotesWindow : Window, IDisposable
 {
     private readonly Config config;
+    private ItemNote itemNote;
 
     private class LabelState
     {
@@ -28,7 +30,7 @@ public class AllNotesWindow : Window, IDisposable
 
     // UI state
     private List<LabelState> labels = new();
-    private readonly Dictionary<string, Config.Note> notes;
+    private readonly Dictionary<string, ItemNote.Note> notes;
     private readonly ExcelSheet<Item>? itemSheet;
     private Dictionary<string, List<LabelState>>? labeldic;
 
@@ -36,12 +38,13 @@ public class AllNotesWindow : Window, IDisposable
 
 
 
-    public AllNotesWindow(Config config) : base(
+    public AllNotesWindow(Config config,ItemNote itemNote) : base(
         "All notes in one Window")
     {
         itemSheet = Plugin.DataManager?.Excel.GetSheet<Item>();
         this.config = config;
-        notes = config.NoteDict();
+        this.itemNote = itemNote;
+        notes = itemNote.NoteDict();
         Flags = ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.AlwaysVerticalScrollbar;
         
 
@@ -65,7 +68,7 @@ public class AllNotesWindow : Window, IDisposable
             labels = new List<LabelState>();
            
             
-                foreach (var label in config.Labels.Values)
+                foreach (var label in itemNote.Labels.Values)
                 {
                     var noteHasLabel = noteLabels.Contains(label.Name);
                     labels.Add(new LabelState(label.Name, noteHasLabel));
@@ -127,7 +130,7 @@ public class AllNotesWindow : Window, IDisposable
                 {
                     foreach ( var label in labeldic[input])
                     {
-                        var labelConfig = config.Labels[label.Name];
+                        var labelConfig = itemNote.Labels[label.Name];
                         if (!labelConfig.HideLabel)
                         {
                             ImGui.SameLine();
@@ -156,16 +159,17 @@ public class AllNotesWindow : Window, IDisposable
                             note.Labels.Add(label.Name);
                         }
                     }
-                    config[key] = note;
+                    itemNote[key] = note;
                 }
                 else
                 {
-                    config.Remove(key);
+                    itemNote.Remove(key);
                 }
                 
                 
             }
             config.Save();
+            itemNote.Save();
             if (saveAndQuit)
             {
                 IsOpen = false;  

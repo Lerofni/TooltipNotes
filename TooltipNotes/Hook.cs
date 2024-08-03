@@ -36,7 +36,7 @@ public  class Hook : IDisposable
     
     protected static unsafe TooltipFlags GetTooltipVisibility(int** numberArrayData)
     {
-        return (TooltipFlags)(*(*(numberArrayData + 4) + 4));
+        return (TooltipFlags)(*(*(numberArrayData + 4) + 5));
     }
    
      protected static unsafe SeString? GetTooltipString(StringArrayData* stringArrayData, int field) {
