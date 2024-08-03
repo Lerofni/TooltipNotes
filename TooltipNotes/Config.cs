@@ -15,7 +15,7 @@ namespace NotesPlugin
         public int Version { get; set; } = 0;
 
         [NonSerialized]
-        public DalamudPluginInterface? PluginInterface;
+        public IDalamudPluginInterface? PluginInterface;
         
 
         public class Markup
