@@ -21,7 +21,7 @@ public class TooltipLogic : Hook
         var GlamourName = GetTooltipString(stringArrayData, ItemTooltipField.GlamourName);
         ItemTooltipField field;
         var appendNote = true;
-        
+        Plugin.PluginLog?.Debug($"Description: {GetTooltipString(stringArrayData, ItemTooltipField.ItemDescription)}");
         var tooltipVisibility = GetTooltipVisibility((int**)numberArrayData);
         if (tooltipVisibility.HasFlag(TooltipFlags.Description))
         {
@@ -202,6 +202,7 @@ public class TooltipLogic : Hook
             }
 
             // Modify the tooltip
+            Plugin.PluginLog.Debug($"Setting tooltip for {field} to {description.Build()}");
             SetTooltipString(stringArrayData, field, description.Build());
             
         }
