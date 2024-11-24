@@ -9,10 +9,10 @@ using NotesPlugin.Windows;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Plugin.Services;
-using Lumina.Excel.GeneratedSheets;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using Lumina.Excel.Sheets;
 
 namespace NotesPlugin
 {
@@ -86,14 +86,15 @@ namespace NotesPlugin
                 var colorSheet = DataManager.GetExcelSheet<UIColor>();
                 if (colorSheet != null)
                 {
-                    for (var i = 0u; i < colorSheet.RowCount; i++)
+                    for (var i = 0u; i < colorSheet.Count; i++)
                     {
-                        var row = colorSheet.GetRow(i);
-                        if (row != null)
+
+                        if (colorSheet.TryGetRow(i, out var row))
                         {
                             ConfigWindow.ForegroundColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIForeground));
-                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIGlow));
+                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIGlow)); 
                         }
+                        
                     }
                 }
             }
