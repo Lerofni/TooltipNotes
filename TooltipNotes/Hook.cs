@@ -37,7 +37,7 @@ public  class Hook : IDisposable
     
     protected static unsafe TooltipFlags GetTooltipVisibility(int** numberArrayData)
 {
-    return (TooltipFlags)RaptureAtkModule.Instance()->AtkArrayDataHolder.GetNumberArrayData(29)->IntArray[19];
+    return (TooltipFlags)RaptureAtkModule.Instance()->AtkArrayDataHolder.GetNumberArrayData(29)->IntArray[5];
 }
    
      protected static unsafe SeString? GetTooltipString(StringArrayData* stringArrayData, int field) {

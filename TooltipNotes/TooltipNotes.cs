@@ -149,7 +149,7 @@ namespace NotesPlugin
             PluginInterface!.UiBuilder.Draw += windowSystem.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
 
-            ContextMenu.OnMenuOpened += OnMenuOpened;
+            ContextMenu!.OnMenuOpened += OnMenuOpened;
             hook = new Hook();
             tooltipLogic = new TooltipLogic(Config, itemNote);
             hook.addList(tooltipLogic);
@@ -246,7 +246,7 @@ namespace NotesPlugin
             allNotesWindow.Dispose();
             // contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
             // contextMenuBase.Dispose();
-            ContextMenu.OnMenuOpened -= OnMenuOpened;
+            ContextMenu!.OnMenuOpened -= OnMenuOpened;
             tooltipLogic.Dispose();
             hook.Dispose();
             CommandManager?.RemoveHandler(openconfig);

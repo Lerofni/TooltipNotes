@@ -94,7 +94,7 @@ public class AllNotesWindow : Window, IDisposable
                         itemId -= 1000000;
                     } 
                 }
-                var itemName = itemSheet.GetRow(itemId).Name.ToString();
+                var itemName = itemSheet!.GetRow(itemId).Name.ToString();
                 //  is the glamour icon ingame 
                 if (Regex.IsMatch(input, @"") && config.GlamourNote == 0)
                 {
