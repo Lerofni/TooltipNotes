@@ -202,7 +202,7 @@ public class TooltipLogic : Hook
             }
 
             // Modify the tooltip
-            Plugin.PluginLog.Debug($"Setting tooltip for {field} to {description.Build()}");
+            Plugin.PluginLog!.Debug($"Setting tooltip for {field} to {description.Build()}");
             SetTooltipString(stringArrayData, field, description.Build());
             
         }

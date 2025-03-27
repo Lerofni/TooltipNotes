@@ -91,8 +91,9 @@ namespace NotesPlugin
 
                         if (colorSheet.TryGetRow(i, out var row))
                         {
-                            ConfigWindow.ForegroundColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIForeground));
-                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.UIGlow)); 
+                            ConfigWindow.ForegroundColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.Dark));
+                            ConfigWindow.GlowColors.Add(ConfigWindow.ColorInfo.FromUIColor((ushort)i, row.Light)); 
+                            
                         }
                         
                     }
