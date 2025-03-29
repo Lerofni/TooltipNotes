@@ -125,7 +125,7 @@ namespace NotesPlugin
                 PluginLog?.Error("Configuration could not be loaded");
             }
 
-            if (!File.Exists(configDirectory + "\\TooltipNotes.json.old"))
+            if (!File.Exists(configDirectory + "\\TooltipNotes.json.old") & File.Exists(configDirectory + "\\ItemNotes.json"))
             {
                 itemNote = new ItemNote();
                 itemNote.ConfigDirectory = configDirectory;

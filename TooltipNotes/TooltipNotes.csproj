@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.Sdk/12.0.2">
     <PropertyGroup>
-        <Version>1.6.1.0</Version>
+        <Version>1.6.2.0</Version>
         <Description>A Plugin to add notes to Tooltips</Description>
         <PackageProjectUrl>https://github.com/Lerofni/TooltipNotes.git</PackageProjectUrl>
         <Configurations>Debug;Release</Configurations>
