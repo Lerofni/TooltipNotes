@@ -37,7 +37,7 @@ public  class Hook : IDisposable
     
     protected static unsafe TooltipFlags GetTooltipVisibility(int** numberArrayData)
 {
-    return (TooltipFlags)RaptureAtkModule.Instance()->AtkArrayDataHolder.GetNumberArrayData(29)->IntArray[5];
+    return (TooltipFlags)RaptureAtkModule.Instance()->AtkArrayDataHolder.GetNumberArrayData(30)->IntArray[5];
 }
    
      protected static unsafe SeString? GetTooltipString(StringArrayData* stringArrayData, int field) {
@@ -63,7 +63,7 @@ public  class Hook : IDisposable
      }
     
      private unsafe delegate void* GenerateItemTooltip(AtkUnitBase* addonItemDetail, NumberArrayData* numberArrayData, StringArrayData* stringArrayData);
-     [Signature("48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 50 48 8B 42 28", DetourName = nameof(GenerateItemTooltipDetour),  UseFlags = SignatureUseFlags.Hook)]
+     [Signature("48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 48 8B 42 ?? 4C 8B EA", DetourName = nameof(GenerateItemTooltipDetour),  UseFlags = SignatureUseFlags.Hook)]
      private Hook<GenerateItemTooltip>? generateItemTooltipHook = null;
 
      public Hook()

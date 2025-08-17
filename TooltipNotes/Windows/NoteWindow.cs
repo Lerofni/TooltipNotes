@@ -3,9 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Logging;
-
 namespace NotesPlugin.Windows;
 
 public class NoteWindow : Window, IDisposable

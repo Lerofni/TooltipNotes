@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
