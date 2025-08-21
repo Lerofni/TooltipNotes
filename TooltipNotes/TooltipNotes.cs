@@ -3,6 +3,7 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
+using Dalamud.Configuration;
 using Dalamud.Interface.Windowing;
 using NotesPlugin.Windows;
 
@@ -130,6 +131,11 @@ namespace NotesPlugin
                 itemNote = new ItemNote();
                 itemNote.ConfigDirectory = configDirectory;
                 ConvertNotes();
+            }
+            else if (!File.Exists(configDirectory + "\\ItemNotes.json"))
+            {
+                itemNote = new ItemNote();
+                itemNote.ConfigDirectory = configDirectory;
             }
             else
             {
