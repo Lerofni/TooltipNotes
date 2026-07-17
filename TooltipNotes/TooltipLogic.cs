@@ -62,7 +62,7 @@ public class TooltipLogic : Hook
 
         if (config.CharacterSpecific)
         {
-            Plugin.lastNoteKey = $"{Plugin.ClientState!.LocalContentId:X16}-" + Plugin.lastNoteKey;
+            Plugin.lastNoteKey = $"{Plugin.PlayerState!.ContentId:X16}-" + Plugin.lastNoteKey;
         }
 
 

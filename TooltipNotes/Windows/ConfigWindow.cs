@@ -65,7 +65,7 @@ public class ConfigWindow : Window, IDisposable
         enableDebug = config.EnableDebug;
         characterNote = config.CharacterNote;
         glamourNote = config.GlamourNote;
-        if (Plugin.ClientState!.IsLoggedIn) characterId = Plugin.ClientState.LocalContentId;
+        if (Plugin.ClientState!.IsLoggedIn) characterId = Plugin.PlayerState!.ContentId;
         try
         {
             labels = ItemNote.DeepClone(itemNote.Labels.Values.Where(l => l.Name.Length > 0).ToList());
