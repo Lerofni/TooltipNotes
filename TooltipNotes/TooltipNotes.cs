@@ -72,6 +72,9 @@ namespace NotesPlugin
         [PluginService]
         public static IContextMenu? ContextMenu{ get; private set; }
 
+        [PluginService]
+        public static IPlayerState? PlayerState { get; private set; }
+
         private Hook hook;
         private Hook tooltipLogic;
 
